@@ -8,45 +8,51 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
-  <div class="max-w-3xl mx-auto space-y-6">
+  <div class="max-w-4xl mx-auto space-y-6">
     <header class="bg-emerald-800 p-6 rounded-2xl shadow-lg border border-emerald-600 flex flex-col md:flex-row justify-between items-center gap-4">
       <div>
         <h1 class="text-3xl font-black tracking-wide text-white">NOTAS DO VERDÃO 🐷</h1>
         <p id="matchInfo" class="text-emerald-200 text-sm mt-1">Carregando partida...</p>
       </div>
-      <div class="flex items-center gap-2">
-        <label class="text-sm font-semibold text-emerald-100">Quem é você?</label>
-        <select id="friendSelect" class="bg-slate-800 text-white border border-emerald-500 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-400">
-          <option value="Amigo 1">Amigo 1</option>
-          <option value="Amigo 2">Amigo 2</option>
-          <option value="Amigo 3">Amigo 3</option>
-          <option value="Amigo 4">Amigo 4</option>
-          <option value="Amigo 5">Amigo 5</option>
+      <div class="flex items-center gap-3 bg-emerald-950/60 px-4 py-2 rounded-xl border border-emerald-500/40">
+        <label class="text-sm font-semibold text-emerald-100">Avaliador:</label>
+        <select id="friendSelect" class="bg-slate-800 text-white font-bold border border-emerald-500 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-400">
+          <option value="Celão">Celão</option>
+          <option value="Danão">Danão</option>
+          <option value="Bona">Bona</option>
+          <option value="Gabão">Gabão</option>
+          <option value="Calango">Calango</option>
         </select>
       </div>
     </header>
 
     <div class="flex gap-2 border-b border-slate-700 pb-2">
-      <button id="tabRate" onclick="switchTab('rate')" class="px-4 py-2 font-bold rounded-lg bg-emerald-600 text-white">Avaliar Jogadores</button>
-      <button id="tabCompare" onclick="switchTab('compare')" class="px-4 py-2 font-bold rounded-lg bg-slate-800 text-slate-400">Comparativo Geral</button>
+      <button id="tabRate" onclick="switchTab('rate')" class="px-5 py-2.5 font-bold rounded-lg bg-emerald-600 text-white">Avaliar Jogadores</button>
+      <button id="tabCompare" onclick="switchTab('compare')" class="px-5 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400">Comparativo da Galera</button>
     </div>
 
+    <!-- Tela de Avaliação -->
     <main id="viewRate" class="space-y-4">
-      <div id="playersList" class="space-y-3"></div>
+      <div id="playersList" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
       <button id="btnSave" onclick="saveRatings()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-lg rounded-xl shadow-lg transition">
         Salvar Minhas Notas
       </button>
     </main>
 
+    <!-- Tela de Comparação -->
     <main id="viewCompare" class="hidden">
       <div class="overflow-x-auto bg-slate-800 rounded-xl border border-slate-700">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="bg-slate-700/60 text-slate-300 text-sm border-b border-slate-600">
-              <th class="p-3">Jogador</th>
+            <tr class="bg-slate-700/70 text-slate-300 text-xs uppercase tracking-wider border-b border-slate-600">
+              <th class="p-3">Atleta</th>
               <th class="p-3">Posição</th>
               <th class="p-3 text-emerald-400 font-bold">Média</th>
-              <th class="p-3">Notas Registradas</th>
+              <th class="p-3 text-center">Celão</th>
+              <th class="p-3 text-center">Danão</th>
+              <th class="p-3 text-center">Bona</th>
+              <th class="p-3 text-center">Gabão</th>
+              <th class="p-3 text-center">Calango</th>
             </tr>
           </thead>
           <tbody id="compareTableBody" class="divide-y divide-slate-700 text-sm"></tbody>
@@ -60,35 +66,69 @@
     const SUPABASE_KEY = "sb_publishable_kP5nMFx8P0OmrV0gocZqEg_0ZXI56r1";
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    const FRIENDS = ["Celão", "Danão", "Bona", "Gabão", "Calango"];
+
+    const ELENCO_PALMEIRAS = [
+      { name: "Carlos Miguel", pos: "Goleiro" },
+      { name: "Marcelo Lomba", pos: "Goleiro" },
+      { name: "Gustavo Gómez", pos: "Zagueiro" },
+      { name: "Murilo", pos: "Zagueiro" },
+      { name: "Alexander Barboza", pos: "Zagueiro" },
+      { name: "Bruno Fuchs", pos: "Zagueiro" },
+      { name: "Joaquín Piquerez", pos: "Lateral" },
+      { name: "Khellven", pos: "Lateral" },
+      { name: "Agustín Giay", pos: "Lateral" },
+      { name: "Jefté", pos: "Lateral" },
+      { name: "Andreas Pereira", pos: "Meia" },
+      { name: "Marlon Freitas", pos: "Volante" },
+      { name: "Emiliano Martínez", pos: "Volante" },
+      { name: "Mauricio", pos: "Meia" },
+      { name: "Lucas Evangelista", pos: "Meia" },
+      { name: "Felipe Anderson", pos: "Meia/Atacante" },
+      { name: "Jhon Arias", pos: "Atacante" },
+      { name: "Paulinho", pos: "Atacante" },
+      { name: "Ramón Sosa", pos: "Atacante" },
+      { name: "Vitor Roque", pos: "Atacante" },
+      { name: "Flaco López", pos: "Atacante" },
+      { name: "Abel Ferreira", pos: "Técnico" }
+    ];
+
     let currentMatch = null;
     let players = [];
     let ratings = [];
 
     async function init() {
-      // 1. Busca último jogo ou cria um inicial de teste
+      // Busca a partida ativa mais recente
       let { data: matches } = await db.from('matches').select('*').order('match_date', { ascending: false }).limit(1);
       
       if (!matches || matches.length === 0) {
-        const { data: newMatch } = await db.from('matches').insert([{ opponent: 'Vasco', match_date: '2026-09-04', competition: 'Brasileirão' }]).select().single();
+        const { data: newMatch } = await db.from('matches').insert([{ 
+          opponent: 'Próxima Partida', 
+          match_date: new Date().toISOString().split('T')[0], 
+          competition: 'Brasileirão' 
+        }]).select().single();
         currentMatch = newMatch;
 
-        const defaultPlayers = [
-          { match_id: currentMatch.id, player_name: 'Weverton', position: 'Goleiro' },
-          { match_id: currentMatch.id, player_name: 'Gustavo Gómez', position: 'Zagueiro' },
-          { match_id: currentMatch.id, player_name: 'Murilo', position: 'Zagueiro' },
-          { match_id: currentMatch.id, player_name: 'Piquerez', position: 'Lateral' },
-          { match_id: currentMatch.id, player_name: 'Mayke', position: 'Lateral' },
-          { match_id: currentMatch.id, player_name: 'Aníbal Moreno', position: 'Volante' },
-          { match_id: currentMatch.id, player_name: 'Richard Ríos', position: 'Meia' },
-          { match_id: currentMatch.id, player_name: 'Raphael Veiga', position: 'Meia' },
-          { match_id: currentMatch.id, player_name: 'Felipe Anderson', position: 'Atacante' },
-          { match_id: currentMatch.id, player_name: 'Flaco López', position: 'Atacante' },
-          { match_id: currentMatch.id, player_name: 'Estêvão', position: 'Atacante' },
-          { match_id: currentMatch.id, player_name: 'Abel Ferreira', position: 'Técnico' }
-        ];
-        await db.from('match_players').insert(defaultPlayers);
+        const roster = ELENCO_PALMEIRAS.map(p => ({
+          match_id: currentMatch.id,
+          player_name: p.name,
+          position: p.pos
+        }));
+        await db.from('match_players').insert(roster);
       } else {
         currentMatch = matches[0];
+        
+        // Garante que o elenco cadastrado esteja sincronizado com o atual
+        const { data: existingP } = await db.from('match_players').select('player_name').eq('match_id', currentMatch.id);
+        const existingNames = (existingP || []).map(p => p.player_name);
+        const missing = ELENCO_PALMEIRAS.filter(p => !existingNames.includes(p.name)).map(p => ({
+          match_id: currentMatch.id,
+          player_name: p.name,
+          position: p.pos
+        }));
+        if (missing.length > 0) {
+          await db.from('match_players').insert(missing);
+        }
       }
 
       document.getElementById('matchInfo').textContent = `Palmeiras vs ${currentMatch.opponent} • ${currentMatch.competition}`;
@@ -116,17 +156,17 @@
         const currentScore = existing ? existing.score : '6.0';
 
         const card = document.createElement('div');
-        card.className = "bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col md:flex-row justify-between items-center gap-3";
+        card.className = "bg-slate-800/80 p-4 rounded-xl border border-slate-700 flex flex-col justify-between gap-3";
         card.innerHTML = `
-          <div class="flex items-center gap-3 w-full md:w-auto">
-            <span class="text-xs font-bold px-2 py-1 bg-slate-700 text-slate-300 rounded">${p.position}</span>
-            <span class="font-bold text-lg">${p.player_name}</span>
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-base text-white">${p.player_name}</span>
+            <span class="text-xs font-semibold px-2 py-0.5 bg-slate-700 text-slate-300 rounded">${p.position}</span>
           </div>
-          <div class="flex items-center gap-4 w-full md:w-auto justify-end">
+          <div class="flex items-center justify-between gap-3 pt-2 border-t border-slate-700/50">
             <input type="range" min="0" max="10" step="0.5" value="${currentScore}" id="range-${p.id}" 
-                   class="w-36 accent-emerald-500 cursor-pointer" 
-                   oninput="document.getElementById('val-${p.id}').textContent = this.value">
-            <span id="val-${p.id}" class="text-xl font-black text-emerald-400 w-10 text-right">${currentScore}</span>
+                   class="w-full accent-emerald-500 cursor-pointer" 
+                   oninput="document.getElementById('val-${p.id}').textContent = Number(this.value).toFixed(1)">
+            <span id="val-${p.id}" class="text-lg font-black text-emerald-400 min-w-[2.5rem] text-right">${Number(currentScore).toFixed(1)}</span>
           </div>
         `;
         list.appendChild(card);
@@ -137,11 +177,15 @@
       const currentFriend = document.getElementById('friendSelect').value;
       const btn = document.getElementById('btnSave');
       btn.disabled = true;
-      btn.textContent = 'Salvando...';
+      btn.textContent = 'Gravando notas...';
 
       const updates = players.map(p => {
-        const val = parseFloat(document.getElementById(`range-${p.id}`).value);
-        return { match_player_id: p.id, friend_name: currentFriend, score: val };
+        const input = document.getElementById(`range-${p.id}`);
+        return { 
+          match_player_id: p.id, 
+          friend_name: currentFriend, 
+          score: parseFloat(input ? input.value : 6.0) 
+        };
       });
 
       for (const item of updates) {
@@ -161,14 +205,19 @@
       players.forEach(p => {
         const pRatings = ratings.filter(r => r.match_player_id === p.id);
         const avg = pRatings.length ? (pRatings.reduce((sum, r) => sum + Number(r.score), 0) / pRatings.length).toFixed(1) : '-';
-        const scoresDetails = pRatings.map(r => `${r.friend_name}: ${r.score}`).join(' | ') || 'Nenhuma nota ainda';
+
+        let friendCols = '';
+        FRIENDS.forEach(f => {
+          const r = pRatings.find(item => item.friend_name === f);
+          friendCols += `<td class="p-3 text-center font-mono ${r ? 'text-white' : 'text-slate-600'}">${r ? Number(r.score).toFixed(1) : '-'}</td>`;
+        });
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td class="p-3 font-semibold text-white">${p.player_name}</td>
-          <td class="p-3 text-slate-400">${p.position}</td>
-          <td class="p-3 text-emerald-400 font-extrabold text-base">${avg}</td>
-          <td class="p-3 text-slate-400 text-xs">${scoresDetails}</td>
+          <td class="p-3 text-slate-400 text-xs">${p.position}</td>
+          <td class="p-3 text-emerald-400 font-black text-base">${avg}</td>
+          ${friendCols}
         `;
         tbody.appendChild(tr);
       });
@@ -178,13 +227,13 @@
       if (tab === 'rate') {
         document.getElementById('viewRate').classList.remove('hidden');
         document.getElementById('viewCompare').classList.add('hidden');
-        document.getElementById('tabRate').className = "px-4 py-2 font-bold rounded-lg bg-emerald-600 text-white";
-        document.getElementById('tabCompare').className = "px-4 py-2 font-bold rounded-lg bg-slate-800 text-slate-400";
+        document.getElementById('tabRate').className = "px-5 py-2.5 font-bold rounded-lg bg-emerald-600 text-white";
+        document.getElementById('tabCompare').className = "px-5 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400";
       } else {
         document.getElementById('viewRate').classList.add('hidden');
         document.getElementById('viewCompare').classList.remove('hidden');
-        document.getElementById('tabCompare').className = "px-4 py-2 font-bold rounded-lg bg-emerald-600 text-white";
-        document.getElementById('tabRate').className = "px-4 py-2 font-bold rounded-lg bg-slate-800 text-slate-400";
+        document.getElementById('tabCompare').className = "px-5 py-2.5 font-bold rounded-lg bg-emerald-600 text-white";
+        document.getElementById('tabRate').className = "px-5 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400";
       }
     }
 

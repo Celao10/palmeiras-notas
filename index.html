@@ -17,7 +17,7 @@
       </div>
       <div>
         <h2 class="text-2xl font-black text-white">NOTAS DO VERDÃO</h2>
-        <p class="text-slate-400 text-sm mt-1">Digite seu nome para acessar o bolão</p>
+        <p class="text-slate-400 text-sm mt-1">Digite seu nome para acessar</p>
       </div>
       <div class="space-y-3">
         <input id="loginInput" type="text" placeholder="Ex: Celão, Danão, Bona..." 
@@ -32,18 +32,19 @@
 
   <!-- APLICAÇÃO PRINCIPAL -->
   <div id="appScreen" style="display: none;" class="max-w-4xl mx-auto space-y-6">
-    <!-- Header -->
     <header class="bg-emerald-800 p-6 rounded-2xl shadow-lg border border-emerald-600 flex flex-col md:flex-row justify-between items-center gap-4">
       <div>
         <h1 class="text-3xl font-black tracking-wide text-white">NOTAS DO VERDÃO 🐷</h1>
-        <div class="flex items-center gap-2 mt-2">
+        <div class="flex flex-wrap items-center gap-2 mt-2">
           <select id="matchSelect" onchange="onSelectMatch()" class="bg-emerald-950/80 text-white font-semibold text-sm border border-emerald-500/60 rounded-lg px-3 py-1.5 focus:outline-none">
           </select>
           
-          <!-- Botão Novo Jogo exclusivo para Celão com Modo Admin ativo -->
           <div id="adminActionGroup" style="display: none;" class="items-center gap-2">
             <button onclick="openNewMatchModal()" class="bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black text-xs px-3 py-1.5 rounded-lg shadow transition">
               + Novo Jogo
+            </button>
+            <button onclick="openScoreModal()" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-3 py-1.5 rounded-lg shadow transition">
+              Definir Placar Final
             </button>
           </div>
         </div>
@@ -60,7 +61,6 @@
           </button>
         </div>
 
-        <!-- Alavanca / Switch de Modo Admin (visível apenas para Celão) -->
         <div id="adminToggleContainer" style="display: none;" class="items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 text-xs">
           <span class="text-slate-300 font-semibold">Modo Admin</span>
           <label class="relative inline-flex items-center cursor-pointer">
@@ -71,16 +71,22 @@
       </div>
     </header>
 
-    <!-- Abas de Navegação -->
+    <!-- Navegação de Abas -->
     <div class="flex flex-wrap gap-2 border-b border-slate-700 pb-2">
-      <button id="tabRate" onclick="switchTab('rate')" class="px-5 py-2.5 font-bold rounded-lg bg-emerald-600 text-white">
+      <button id="tabRate" onclick="switchTab('rate')" class="px-4 py-2.5 font-bold rounded-lg bg-emerald-600 text-white text-sm">
         Avaliar Partida
       </button>
-      <button id="tabCompare" onclick="switchTab('compare')" class="px-5 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400">
+      <button id="tabCompare" onclick="switchTab('compare')" class="px-4 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400 text-sm">
         Notas da Rodada
       </button>
-      <button id="tabRanking" onclick="switchTab('ranking')" class="px-5 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400">
-        🏆 Craques & Bagres do Mês
+      <button id="tabTrend" onclick="switchTab('trend')" class="px-4 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400 text-sm">
+        📈 Oscilômetro
+      </button>
+      <button id="tabBolao" onclick="switchTab('bolao')" class="px-4 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400 text-sm">
+        ⚽ Bolão de Palpites
+      </button>
+      <button id="tabRanking" onclick="switchTab('ranking')" class="px-4 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400 text-sm">
+        🏆 Craques & Bagres
       </button>
     </div>
 
@@ -92,9 +98,20 @@
       </button>
     </main>
 
-    <!-- Aba 2: Comparativo -->
+    <!-- Aba 2: Comparativo (Votação Cega) -->
     <main id="viewCompare" style="display: none;">
-      <div class="overflow-x-auto bg-slate-800 rounded-xl border border-slate-700">
+      <div id="blindVoteWarning" style="display: none;" class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-8 text-center space-y-3">
+        <div class="text-4xl">🙈</div>
+        <h3 class="text-xl font-black text-amber-300">Votação Cega Ativada!</h3>
+        <p class="text-sm text-slate-300 max-w-md mx-auto">
+          Para evitar votos tendenciosos, você só poderá ver as notas dos outros após salvar suas próprias notas da partida.
+        </p>
+        <button onclick="switchTab('rate')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition">
+          Ir para Avaliação
+        </button>
+      </div>
+
+      <div id="compareContent" class="overflow-x-auto bg-slate-800 rounded-xl border border-slate-700">
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="bg-slate-700/70 text-slate-300 text-xs uppercase tracking-wider border-b border-slate-600">
@@ -113,7 +130,54 @@
       </div>
     </main>
 
-    <!-- Aba 3: Ranking -->
+    <!-- Aba 3: Oscilômetro / Tendência -->
+    <main id="viewTrend" style="display: none;" class="space-y-4">
+      <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 text-sm text-slate-300">
+        Compara o rendimento dos atletas na partida atual contra a partida imediatamente anterior.
+      </div>
+      <div id="trendCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+    </main>
+
+    <!-- Aba 4: Bolão de Palpites -->
+    <main id="viewBolao" style="display: none;" class="space-y-6">
+      <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 space-y-4">
+        <h3 class="text-lg font-black text-white flex items-center justify-between">
+          <span>Seu Palpite para esta Partida</span>
+          <span id="bolaoMatchTitle" class="text-xs text-emerald-400 font-normal"></span>
+        </h3>
+        <div class="flex items-center justify-center gap-4 py-2">
+          <div class="text-center">
+            <span class="block font-bold text-sm text-slate-300 mb-1">Palmeiras</span>
+            <input id="inputPredPalmeiras" type="number" min="0" max="20" class="w-16 h-14 bg-slate-900 border border-slate-700 rounded-xl text-center text-2xl font-black text-white focus:outline-none focus:border-emerald-500">
+          </div>
+          <span class="text-2xl font-black text-slate-600 mt-5">X</span>
+          <div class="text-center">
+            <span id="bolaoOpponentName" class="block font-bold text-sm text-slate-300 mb-1">Adversário</span>
+            <input id="inputPredOpponent" type="number" min="0" max="20" class="w-16 h-14 bg-slate-900 border border-slate-700 rounded-xl text-center text-2xl font-black text-white focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+        <button id="btnSavePrediction" onclick="savePrediction()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-sm rounded-xl transition">
+          Confirmar Palpite
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Palpites desta Partida -->
+        <div class="bg-slate-800 rounded-xl border border-slate-700 p-4 space-y-3">
+          <h4 class="font-bold text-slate-200 text-sm">Palpites Registrados no Jogo</h4>
+          <div id="matchPredictionsList" class="divide-y divide-slate-700 text-sm"></div>
+        </div>
+
+        <!-- Ranking Geral do Bolão -->
+        <div class="bg-slate-800 rounded-xl border border-slate-700 p-4 space-y-3">
+          <h4 class="font-bold text-slate-200 text-sm">Classificação do Bolão (Geral)</h4>
+          <p class="text-xs text-slate-400">Placar exato: 2 pts • Acerto de vencedor/empate: 1 pt</p>
+          <div id="bolaoRankingList" class="divide-y divide-slate-700 text-sm"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Aba 5: Ranking Craques & Bagres -->
     <main id="viewRanking" style="display: none;" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="bg-gradient-to-br from-emerald-900/60 to-slate-800 border-2 border-emerald-500/50 p-6 rounded-2xl flex items-center gap-4">
@@ -169,6 +233,32 @@
     </div>
   </div>
 
+  <!-- MODAL DEFINIR PLACAR OFICIAL (CELÃO) -->
+  <div id="scoreModal" style="display: none;" class="fixed inset-0 bg-black/80 items-center justify-center p-4 z-50">
+    <div class="bg-slate-800 p-6 rounded-2xl border border-amber-500 max-w-md w-full space-y-4">
+      <h3 class="text-xl font-black text-white">Placar Oficial do Jogo 🏁</h3>
+      <div class="flex items-center justify-center gap-4 py-2">
+        <div class="text-center">
+          <span class="block font-bold text-xs text-slate-300 mb-1">Palmeiras</span>
+          <input id="scorePalmeiras" type="number" min="0" max="20" class="w-16 h-12 bg-slate-900 border border-slate-700 rounded-lg text-center text-xl font-black text-white">
+        </div>
+        <span class="text-xl font-bold text-slate-500 mt-4">X</span>
+        <div class="text-center">
+          <span id="scoreModalOpponent" class="block font-bold text-xs text-slate-300 mb-1">Adversário</span>
+          <input id="scoreOpponent" type="number" min="0" max="20" class="w-16 h-12 bg-slate-900 border border-slate-700 rounded-lg text-center text-xl font-black text-white">
+        </div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeScoreModal()" class="w-1/2 py-2.5 bg-slate-700 hover:bg-slate-600 font-bold rounded-xl text-slate-300 transition">
+          Cancelar
+        </button>
+        <button onclick="saveFinalScore()" class="w-1/2 py-2.5 bg-amber-500 hover:bg-amber-400 font-bold rounded-xl text-slate-950 transition">
+          Salvar Placar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const SUPABASE_URL = "https://exkurcyjralifdgdmdjt.supabase.co";
     const SUPABASE_KEY = "sb_publishable_kP5nMFx8P0OmrV0gocZqEg_0ZXI56r1";
@@ -213,6 +303,7 @@
     let currentMatchId = null;
     let players = [];
     let ratings = [];
+    let predictions = [];
 
     function cleanStr(str) {
       return (str || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -220,8 +311,7 @@
 
     function handleLogin() {
       const input = document.getElementById('loginInput').value;
-      const cleaned = cleanStr(input);
-      const match = FRIENDS.find(f => cleanStr(f) === cleaned);
+      const match = FRIENDS.find(f => cleanStr(f) === cleanStr(input));
 
       if (match) {
         currentUser = match;
@@ -279,8 +369,7 @@
 
     async function initApp() {
       try {
-        let { data: matches, error } = await db.from('matches').select('*').order('match_date', { ascending: false });
-        if (error) console.error(error);
+        let { data: matches } = await db.from('matches').select('*').order('match_date', { ascending: false });
         
         if (!matches || matches.length === 0) {
           const { data: newMatch } = await db.from('matches').insert([INITIAL_MATCH]).select().single();
@@ -294,15 +383,13 @@
           await db.from('match_players').insert(roster);
         } else {
           allMatches = matches;
-          if (!currentMatchId) {
-            currentMatchId = matches[0].id;
-          }
+          if (!currentMatchId) currentMatchId = matches[0].id;
         }
 
         renderMatchSelect();
         await loadData();
       } catch (err) {
-        console.error("Erro no initApp:", err);
+        console.error(err);
       }
     }
 
@@ -312,7 +399,8 @@
       allMatches.forEach(m => {
         const opt = document.createElement('option');
         opt.value = m.id;
-        opt.textContent = `Palmeiras vs ${m.opponent} (${m.competition})`;
+        const scoreStr = (m.home_score !== null && m.away_score !== null) ? ` [${m.home_score}x${m.away_score}]` : '';
+        opt.textContent = `Palmeiras vs ${m.opponent}${scoreStr} (${m.competition})`;
         if (m.id === currentMatchId) opt.selected = true;
         select.appendChild(opt);
       });
@@ -362,6 +450,33 @@
       await initApp();
     }
 
+    function openScoreModal() {
+      const curMatch = allMatches.find(m => m.id === currentMatchId);
+      if (!curMatch) return;
+      document.getElementById('scoreModalOpponent').textContent = curMatch.opponent;
+      document.getElementById('scorePalmeiras').value = curMatch.home_score !== null ? curMatch.home_score : '';
+      document.getElementById('scoreOpponent').value = curMatch.away_score !== null ? curMatch.away_score : '';
+      document.getElementById('scoreModal').style.display = 'flex';
+    }
+
+    function closeScoreModal() {
+      document.getElementById('scoreModal').style.display = 'none';
+    }
+
+    async function saveFinalScore() {
+      const home = document.getElementById('scorePalmeiras').value;
+      const away = document.getElementById('scoreOpponent').value;
+      if (home === '' || away === '') return alert('Preencha os dois placares.');
+
+      await db.from('matches').update({
+        home_score: parseInt(home),
+        away_score: parseInt(away)
+      }).eq('id', currentMatchId);
+
+      closeScoreModal();
+      await initApp();
+    }
+
     async function loadData() {
       try {
         const { data: pData } = await db.from('match_players').select('*').eq('match_id', currentMatchId);
@@ -370,11 +485,22 @@
         const { data: rData } = await db.from('ratings').select('*');
         ratings = rData || [];
 
+        const { data: predData } = await db.from('match_predictions').select('*');
+        predictions = predData || [];
+
+        const curMatch = allMatches.find(m => m.id === currentMatchId);
+        if (curMatch) {
+          document.getElementById('bolaoMatchTitle').textContent = `Palmeiras vs ${curMatch.opponent}`;
+          document.getElementById('bolaoOpponentName').textContent = curMatch.opponent;
+        }
+
         renderRateList();
         renderCompareTable();
+        renderTrend();
+        renderBolao();
         renderRanking();
       } catch (err) {
-        console.error("Erro no loadData:", err);
+        console.error(err);
       }
     }
 
@@ -463,6 +589,23 @@
     }
 
     function renderCompareTable() {
+      // Regra da Votação Cega: verificar se o usuário já salvou alguma nota nesta partida
+      const userHasVoted = players.some(p => {
+        return ratings.some(r => r.match_player_id === p.id && r.friend_name === currentUser);
+      });
+
+      const warning = document.getElementById('blindVoteWarning');
+      const content = document.getElementById('compareContent');
+
+      if (!userHasVoted) {
+        warning.style.display = 'block';
+        content.style.display = 'none';
+        return;
+      }
+
+      warning.style.display = 'none';
+      content.style.display = 'block';
+
       const tbody = document.getElementById('compareTableBody');
       tbody.innerHTML = '';
 
@@ -487,6 +630,160 @@
         `;
         tbody.appendChild(tr);
       });
+    }
+
+    // Lógica do Oscilômetro (Comparação com o jogo anterior)
+    async function renderTrend() {
+      const container = document.getElementById('trendCardsContainer');
+      container.innerHTML = '';
+
+      // Identifica o jogo anterior cronológico
+      const sortedMatches = [...allMatches].sort((a, b) => new Date(b.match_date) - new Date(a.match_date));
+      const curIndex = sortedMatches.findIndex(m => m.id === currentMatchId);
+      const prevMatch = sortedMatches[curIndex + 1] || null;
+
+      let prevPlayerRatings = [];
+      if (prevMatch) {
+        const { data: pPrev } = await db.from('match_players').select('id, player_name').eq('match_id', prevMatch.id);
+        if (pPrev && pPrev.length > 0) {
+          const ids = pPrev.map(x => x.id);
+          const { data: rPrev } = await db.from('ratings').select('*').in('match_player_id', ids);
+          prevPlayerRatings = (pPrev || []).map(pl => {
+            const valid = (rPrev || []).filter(r => r.match_player_id === pl.id && Number(r.score) >= 0);
+            const avg = valid.length ? valid.reduce((s, r) => s + Number(r.score), 0) / valid.length : null;
+            return { name: pl.player_name, avg };
+          });
+        }
+      }
+
+      players.forEach(p => {
+        const curValid = ratings.filter(r => r.match_player_id === p.id && Number(r.score) >= 0);
+        const curAvg = curValid.length ? curValid.reduce((s, r) => s + Number(r.score), 0) / curValid.length : null;
+
+        const prevObj = prevPlayerRatings.find(x => x.name === p.player_name);
+        const prevAvg = prevObj ? prevObj.avg : null;
+
+        let diffBadge = `<span class="text-xs text-slate-500 font-medium">Sem dados anteriores</span>`;
+        if (curAvg !== null && prevAvg !== null) {
+          const diff = curAvg - prevAvg;
+          if (diff > 0.05) {
+            diffBadge = `<span class="text-xs font-bold text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-500/40">🟢 +${diff.toFixed(1)}</span>`;
+          } else if (diff < -0.05) {
+            diffBadge = `<span class="text-xs font-bold text-rose-400 bg-rose-950/80 px-2.5 py-1 rounded-full border border-rose-500/40">🔴 ${diff.toFixed(1)}</span>`;
+          } else {
+            diffBadge = `<span class="text-xs font-bold text-slate-300 bg-slate-800 px-2.5 py-1 rounded-full border border-slate-700">⚪ = 0.0</span>`;
+          }
+        }
+
+        const card = document.createElement('div');
+        card.className = "bg-slate-800/80 p-4 rounded-xl border border-slate-700 flex items-center justify-between";
+        card.innerHTML = `
+          <div>
+            <div class="font-bold text-white">${p.player_name}</div>
+            <div class="text-xs text-slate-400">${p.position} • Média Atual: <span class="font-bold ${curAvg ? 'text-white' : 'text-slate-500'}">${curAvg ? curAvg.toFixed(1) : '-'}</span></div>
+          </div>
+          <div>${diffBadge}</div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Lógica do Bolão
+    async function savePrediction() {
+      const palmeirasGoals = document.getElementById('inputPredPalmeiras').value;
+      const opponentGoals = document.getElementById('inputPredOpponent').value;
+
+      if (palmeirasGoals === '' || opponentGoals === '') {
+        return alert('Digite o número de gols dos dois times.');
+      }
+
+      await db.from('match_predictions').upsert({
+        match_id: currentMatchId,
+        friend_name: currentUser,
+        palmeiras_goals: parseInt(palmeirasGoals),
+        opponent_goals: parseInt(opponentGoals)
+      }, { onConflict: 'match_id,friend_name' });
+
+      alert('Palpite salvo com sucesso!');
+      await loadData();
+    }
+
+    function renderBolao() {
+      // Carrega palpite do usuário logado no formulário
+      const myPred = predictions.find(p => p.match_id === currentMatchId && p.friend_name === currentUser);
+      if (myPred) {
+        document.getElementById('inputPredPalmeiras').value = myPred.palmeiras_goals;
+        document.getElementById('inputPredOpponent').value = myPred.opponent_goals;
+      } else {
+        document.getElementById('inputPredPalmeiras').value = '';
+        document.getElementById('inputPredOpponent').value = '';
+      }
+
+      // Lista palpites do jogo atual
+      const curMatch = allMatches.find(m => m.id === currentMatchId);
+      const matchPreds = predictions.filter(p => p.match_id === currentMatchId);
+      const listDiv = document.getElementById('matchPredictionsList');
+      listDiv.innerHTML = '';
+
+      if (matchPreds.length === 0) {
+        listDiv.innerHTML = `<div class="text-xs text-slate-500 py-2">Nenhum palpite para este jogo ainda.</div>`;
+      } else {
+        matchPreds.forEach(p => {
+          let pointsTag = '';
+          if (curMatch && curMatch.home_score !== null && curMatch.away_score !== null) {
+            const pts = calculatePoints(p.palmeiras_goals, p.opponent_goals, curMatch.home_score, curMatch.away_score);
+            pointsTag = `<span class="ml-2 px-2 py-0.5 rounded text-xs font-black ${pts === 2 ? 'bg-emerald-500 text-slate-950' : (pts === 1 ? 'bg-amber-400 text-slate-950' : 'bg-slate-700 text-slate-400')}">+${pts} pts</span>`;
+          }
+
+          const row = document.createElement('div');
+          row.className = "flex justify-between items-center py-2.5";
+          row.innerHTML = `
+            <span class="font-bold text-white">${p.friend_name}</span>
+            <div class="flex items-center">
+              <span class="font-mono bg-slate-900 px-2.5 py-1 rounded text-emerald-400 font-black">${p.palmeiras_goals} x ${p.opponent_goals}</span>
+              ${pointsTag}
+            </div>
+          `;
+          listDiv.appendChild(row);
+        });
+      }
+
+      // Ranking Geral do Bolão
+      const scoresByFriend = { "Celão": 0, "Danão": 0, "Bona": 0, "Gabão": 0, "Calango": 0 };
+      allMatches.forEach(m => {
+        if (m.home_score !== null && m.away_score !== null) {
+          const mPreds = predictions.filter(p => p.match_id === m.id);
+          mPreds.forEach(pred => {
+            if (scoresByFriend[pred.friend_name] !== undefined) {
+              scoresByFriend[pred.friend_name] += calculatePoints(pred.palmeiras_goals, pred.opponent_goals, m.home_score, m.away_score);
+            }
+          });
+        }
+      });
+
+      const rankingArray = Object.entries(scoresByFriend).map(([name, pts]) => ({ name, pts })).sort((a, b) => b.pts - a.pts);
+      const bolaoListDiv = document.getElementById('bolaoRankingList');
+      bolaoListDiv.innerHTML = '';
+      rankingArray.forEach((item, idx) => {
+        const row = document.createElement('div');
+        row.className = "flex justify-between items-center py-2.5";
+        row.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="font-mono text-xs w-5 text-slate-400">#${idx + 1}</span>
+            <span class="font-bold text-white">${item.name}</span>
+          </div>
+          <span class="font-mono font-black text-amber-400 text-base">${item.pts} pts</span>
+        `;
+        bolaoListDiv.appendChild(row);
+      });
+    }
+
+    function calculatePoints(predHome, predAway, realHome, realAway) {
+      if (predHome === realHome && predAway === realAway) return 2; // Na mosca
+      const predOutcome = Math.sign(predHome - predAway);
+      const realOutcome = Math.sign(realHome - realAway);
+      if (predOutcome === realOutcome) return 1; // Acertou desfecho
+      return 0;
     }
 
     async function renderRanking() {
@@ -541,18 +838,19 @@
     function switchTab(tab) {
       document.getElementById('viewRate').style.display = tab === 'rate' ? 'block' : 'none';
       document.getElementById('viewCompare').style.display = tab === 'compare' ? 'block' : 'none';
+      document.getElementById('viewTrend').style.display = tab === 'trend' ? 'block' : 'none';
+      document.getElementById('viewBolao').style.display = tab === 'bolao' ? 'block' : 'none';
       document.getElementById('viewRanking').style.display = tab === 'ranking' ? 'block' : 'none';
 
-      ['rate', 'compare', 'ranking'].forEach(t => {
+      ['rate', 'compare', 'trend', 'bolao', 'ranking'].forEach(t => {
         const isSelected = t === tab;
         const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
         btn.className = isSelected 
-          ? "px-5 py-2.5 font-bold rounded-lg bg-emerald-600 text-white" 
-          : "px-5 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400";
+          ? "px-4 py-2.5 font-bold rounded-lg bg-emerald-600 text-white text-sm" 
+          : "px-4 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400 text-sm";
       });
     }
 
-    // Inicialização
     checkSession();
   </script>
 </body>

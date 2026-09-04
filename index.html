@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notas do Verdão</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
+  <div class="max-w-3xl mx-auto space-y-6">
+    <header class="bg-emerald-800 p-6 rounded-2xl shadow-lg border border-emerald-600 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div>
+        <h1 class="text-3xl font-black tracking-wide text-white">NOTAS DO VERDÃO 🐷</h1>
+        <p id="matchInfo" class="text-emerald-200 text-sm mt-1">Carregando partida...</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-sm font-semibold text-emerald-100">Quem é você?</label>
+        <select id="friendSelect" class="bg-slate-800 text-white border border-emerald-500 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-400">
+          <option value="Amigo 1">Amigo 1</option>
+          <option value="Amigo 2">Amigo 2</option>
+          <option value="Amigo 3">Amigo 3</option>
+          <option value="Amigo 4">Amigo 4</option>
+          <option value="Amigo 5">Amigo 5</option>
+        </select>
+      </div>
+    </header>
+
+    <div class="flex gap-2 border-b border-slate-700 pb-2">
+      <button id="tabRate" onclick="switchTab('rate')" class="px-4 py-2 font-bold rounded-lg bg-emerald-600 text-white">Avaliar Jogadores</button>
+      <button id="tabCompare" onclick="switchTab('compare')" class="px-4 py-2 font-bold rounded-lg bg-slate-800 text-slate-400">Comparativo Geral</button>
+    </div>
+
+    <main id="viewRate" class="space-y-4">
+      <div id="playersList" class="space-y-3"></div>
+      <button id="btnSave" onclick="saveRatings()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-lg rounded-xl shadow-lg transition">
+        Salvar Minhas Notas
+      </button>
+    </main>
+
+    <main id="viewCompare" class="hidden">
+      <div class="overflow-x-auto bg-slate-800 rounded-xl border border-slate-700">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-700/60 text-slate-300 text-sm border-b border-slate-600">
+              <th class="p-3">Jogador</th>
+              <th class="p-3">Posição</th>
+              <th class="p-3 text-emerald-400 font-bold">Média</th>
+              <th class="p-3">Notas Registradas</th>
+            </tr>
+          </thead>
+          <tbody id="compareTableBody" class="divide-y divide-slate-700 text-sm"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://exkurcyjralifdgdmdjt.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_kP5nMFx8P0OmrV0gocZqEg_0ZXI56r1";
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let currentMatch = null;
+    let players = [];
+    let ratings = [];
+
+    async function init() {
+      // 1. Busca último jogo ou cria um inicial de teste
+      let { data: matches } = await db.from('matches').select('*').order('match_date', { ascending: false }).limit(1);
+      
+      if (!matches || matches.length === 0) {
+        const { data: newMatch } = await db.from('matches').insert([{ opponent: 'Vasco', match_date: '2026-09-04', competition: 'Brasileirão' }]).select().single();
+        currentMatch = newMatch;
+
+        const defaultPlayers = [
+          { match_id: currentMatch.id, player_name: 'Weverton', position: 'Goleiro' },
+          { match_id: currentMatch.id, player_name: 'Gustavo Gómez', position: 'Zagueiro' },
+          { match_id: currentMatch.id, player_name: 'Murilo', position: 'Zagueiro' },
+          { match_id: currentMatch.id, player_name: 'Piquerez', position: 'Lateral' },
+          { match_id: currentMatch.id, player_name: 'Mayke', position: 'Lateral' },
+          { match_id: currentMatch.id, player_name: 'Aníbal Moreno', position: 'Volante' },
+          { match_id: currentMatch.id, player_name: 'Richard Ríos', position: 'Meia' },
+          { match_id: currentMatch.id, player_name: 'Raphael Veiga', position: 'Meia' },
+          { match_id: currentMatch.id, player_name: 'Felipe Anderson', position: 'Atacante' },
+          { match_id: currentMatch.id, player_name: 'Flaco López', position: 'Atacante' },
+          { match_id: currentMatch.id, player_name: 'Estêvão', position: 'Atacante' },
+          { match_id: currentMatch.id, player_name: 'Abel Ferreira', position: 'Técnico' }
+        ];
+        await db.from('match_players').insert(defaultPlayers);
+      } else {
+        currentMatch = matches[0];
+      }
+
+      document.getElementById('matchInfo').textContent = `Palmeiras vs ${currentMatch.opponent} • ${currentMatch.competition}`;
+      await loadData();
+    }
+
+    async function loadData() {
+      const { data: pData } = await db.from('match_players').select('*').eq('match_id', currentMatch.id);
+      players = pData || [];
+
+      const { data: rData } = await db.from('ratings').select('*');
+      ratings = rData || [];
+
+      renderRateList();
+      renderCompareTable();
+    }
+
+    function renderRateList() {
+      const currentFriend = document.getElementById('friendSelect').value;
+      const list = document.getElementById('playersList');
+      list.innerHTML = '';
+
+      players.forEach(p => {
+        const existing = ratings.find(r => r.match_player_id === p.id && r.friend_name === currentFriend);
+        const currentScore = existing ? existing.score : '6.0';
+
+        const card = document.createElement('div');
+        card.className = "bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col md:flex-row justify-between items-center gap-3";
+        card.innerHTML = `
+          <div class="flex items-center gap-3 w-full md:w-auto">
+            <span class="text-xs font-bold px-2 py-1 bg-slate-700 text-slate-300 rounded">${p.position}</span>
+            <span class="font-bold text-lg">${p.player_name}</span>
+          </div>
+          <div class="flex items-center gap-4 w-full md:w-auto justify-end">
+            <input type="range" min="0" max="10" step="0.5" value="${currentScore}" id="range-${p.id}" 
+                   class="w-36 accent-emerald-500 cursor-pointer" 
+                   oninput="document.getElementById('val-${p.id}').textContent = this.value">
+            <span id="val-${p.id}" class="text-xl font-black text-emerald-400 w-10 text-right">${currentScore}</span>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    async function saveRatings() {
+      const currentFriend = document.getElementById('friendSelect').value;
+      const btn = document.getElementById('btnSave');
+      btn.disabled = true;
+      btn.textContent = 'Salvando...';
+
+      const updates = players.map(p => {
+        const val = parseFloat(document.getElementById(`range-${p.id}`).value);
+        return { match_player_id: p.id, friend_name: currentFriend, score: val };
+      });
+
+      for (const item of updates) {
+        await db.from('ratings').upsert(item, { onConflict: 'match_player_id,friend_name' });
+      }
+
+      await loadData();
+      btn.disabled = false;
+      btn.textContent = 'Notas Salvas com Sucesso!';
+      setTimeout(() => { btn.textContent = 'Salvar Minhas Notas'; }, 2000);
+    }
+
+    function renderCompareTable() {
+      const tbody = document.getElementById('compareTableBody');
+      tbody.innerHTML = '';
+
+      players.forEach(p => {
+        const pRatings = ratings.filter(r => r.match_player_id === p.id);
+        const avg = pRatings.length ? (pRatings.reduce((sum, r) => sum + Number(r.score), 0) / pRatings.length).toFixed(1) : '-';
+        const scoresDetails = pRatings.map(r => `${r.friend_name}: ${r.score}`).join(' | ') || 'Nenhuma nota ainda';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-3 font-semibold text-white">${p.player_name}</td>
+          <td class="p-3 text-slate-400">${p.position}</td>
+          <td class="p-3 text-emerald-400 font-extrabold text-base">${avg}</td>
+          <td class="p-3 text-slate-400 text-xs">${scoresDetails}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function switchTab(tab) {
+      if (tab === 'rate') {
+        document.getElementById('viewRate').classList.remove('hidden');
+        document.getElementById('viewCompare').classList.add('hidden');
+        document.getElementById('tabRate').className = "px-4 py-2 font-bold rounded-lg bg-emerald-600 text-white";
+        document.getElementById('tabCompare').className = "px-4 py-2 font-bold rounded-lg bg-slate-800 text-slate-400";
+      } else {
+        document.getElementById('viewRate').classList.add('hidden');
+        document.getElementById('viewCompare').classList.remove('hidden');
+        document.getElementById('tabCompare').className = "px-4 py-2 font-bold rounded-lg bg-emerald-600 text-white";
+        document.getElementById('tabRate').className = "px-4 py-2 font-bold rounded-lg bg-slate-800 text-slate-400";
+      }
+    }
+
+    document.getElementById('friendSelect').addEventListener('change', renderRateList);
+    init();
+  </script>
+</body>
+</html>

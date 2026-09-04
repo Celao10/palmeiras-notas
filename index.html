@@ -8,30 +8,61 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
-  <div class="max-w-4xl mx-auto space-y-6">
+
+  <!-- TELA DE LOGIN POR NOME -->
+  <div id="loginScreen" class="min-h-[80vh] flex items-center justify-center">
+    <div class="bg-slate-800 p-8 rounded-2xl border border-emerald-500/40 shadow-2xl max-w-md w-full text-center space-y-6">
+      <div class="w-16 h-16 bg-emerald-700/40 border border-emerald-500 rounded-full flex items-center justify-center mx-auto text-3xl">
+        🐷
+      </div>
+      <div>
+        <h2 class="text-2xl font-black text-white">NOTAS DO VERDÃO</h2>
+        <p class="text-slate-400 text-sm mt-1">Digite seu nome para acessar o bolão</p>
+      </div>
+      <div class="space-y-3">
+        <input id="loginInput" type="text" placeholder="Ex: Celão, Danão, Bona..." 
+               class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl px-4 py-3 text-center text-lg font-bold text-white focus:outline-none focus:ring-2 focus:ring-emerald-400">
+        <p id="loginError" class="text-rose-400 text-xs hidden font-semibold">Nome não autorizado. Use: Celão, Danão, Bona, Gabão ou Calango.</p>
+        <button onclick="handleLogin()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-base rounded-xl shadow-lg transition">
+          Entrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APLICAÇÃO PRINCIPAL -->
+  <div id="appScreen" class="max-w-4xl mx-auto space-y-6 hidden">
+    <!-- Header -->
     <header class="bg-emerald-800 p-6 rounded-2xl shadow-lg border border-emerald-600 flex flex-col md:flex-row justify-between items-center gap-4">
       <div>
         <h1 class="text-3xl font-black tracking-wide text-white">NOTAS DO VERDÃO 🐷</h1>
-        <p id="matchInfo" class="text-emerald-200 text-sm mt-1">Carregando partida...</p>
+        <p id="matchInfo" class="text-emerald-200 text-sm mt-1 font-medium">Carregando partida...</p>
       </div>
-      <div class="flex items-center gap-3 bg-emerald-950/60 px-4 py-2 rounded-xl border border-emerald-500/40">
-        <label class="text-sm font-semibold text-emerald-100">Avaliador:</label>
-        <select id="friendSelect" class="bg-slate-800 text-white font-bold border border-emerald-500 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-400">
-          <option value="Celão">Celão</option>
-          <option value="Danão">Danão</option>
-          <option value="Bona">Bona</option>
-          <option value="Gabão">Gabão</option>
-          <option value="Calango">Calango</option>
-        </select>
+      <div class="flex items-center gap-3 bg-emerald-950/70 px-4 py-2 rounded-xl border border-emerald-500/40">
+        <div class="text-right">
+          <span class="text-xs text-emerald-300 block">Logado como:</span>
+          <span id="loggedUserDisplay" class="font-extrabold text-white text-base"></span>
+        </div>
+        <button onclick="logout()" class="text-xs bg-red-500/20 hover:bg-red-500/40 text-red-300 px-2 py-1 rounded border border-red-500/30">
+          Sair
+        </button>
       </div>
     </header>
 
-    <div class="flex gap-2 border-b border-slate-700 pb-2">
-      <button id="tabRate" onclick="switchTab('rate')" class="px-5 py-2.5 font-bold rounded-lg bg-emerald-600 text-white">Avaliar Jogadores</button>
-      <button id="tabCompare" onclick="switchTab('compare')" class="px-5 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400">Comparativo da Galera</button>
+    <!-- Navegação de Abas -->
+    <div class="flex flex-wrap gap-2 border-b border-slate-700 pb-2">
+      <button id="tabRate" onclick="switchTab('rate')" class="px-5 py-2.5 font-bold rounded-lg bg-emerald-600 text-white">
+        Avaliar Partida
+      </button>
+      <button id="tabCompare" onclick="switchTab('compare')" class="px-5 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400">
+        Notas da Rodada
+      </button>
+      <button id="tabRanking" onclick="switchTab('ranking')" class="px-5 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400">
+        🏆 Craques & Bagres do Mês
+      </button>
     </div>
 
-    <!-- Tela de Avaliação -->
+    <!-- Aba 1: Avaliação -->
     <main id="viewRate" class="space-y-4">
       <div id="playersList" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
       <button id="btnSave" onclick="saveRatings()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-lg rounded-xl shadow-lg transition">
@@ -39,7 +70,7 @@
       </button>
     </main>
 
-    <!-- Tela de Comparação -->
+    <!-- Aba 2: Comparativo da Rodada -->
     <main id="viewCompare" class="hidden">
       <div class="overflow-x-auto bg-slate-800 rounded-xl border border-slate-700">
         <table class="w-full text-left border-collapse">
@@ -59,6 +90,36 @@
         </table>
       </div>
     </main>
+
+    <!-- Aba 3: Craques e Bagres do Mês -->
+    <main id="viewRanking" class="hidden space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Card Craque -->
+        <div class="bg-gradient-to-br from-emerald-900/60 to-slate-800 border-2 border-emerald-500/50 p-6 rounded-2xl flex items-center gap-4">
+          <div class="text-4xl">🌟</div>
+          <div>
+            <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest block">Craque do Mês</span>
+            <h3 id="craqueName" class="text-2xl font-black text-white">-</h3>
+            <p id="craqueScore" class="text-sm text-emerald-200 mt-0.5">Média: -</p>
+          </div>
+        </div>
+
+        <!-- Card Bagre -->
+        <div class="bg-gradient-to-br from-rose-950/60 to-slate-800 border-2 border-rose-500/50 p-6 rounded-2xl flex items-center gap-4">
+          <div class="text-4xl">🐟</div>
+          <div>
+            <span class="text-xs font-bold text-rose-400 uppercase tracking-widest block">Bagre do Mês</span>
+            <h3 id="bagreName" class="text-2xl font-black text-white">-</h3>
+            <p id="bagreScore" class="text-sm text-rose-200 mt-0.5">Média: -</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-slate-800 rounded-xl border border-slate-700 p-4">
+        <h4 class="font-bold text-slate-200 mb-3 text-sm">Classificação Geral Acumulada do Mês</h4>
+        <div id="monthlyRankingList" class="divide-y divide-slate-700 text-sm"></div>
+      </div>
+    </main>
   </div>
 
   <script>
@@ -68,7 +129,13 @@
 
     const FRIENDS = ["Celão", "Danão", "Bona", "Gabão", "Calango"];
 
-    // Apenas atletas que pertencem ao elenco atual
+    // Dados da Próxima Partida Oficial
+    const NEXT_MATCH = {
+      opponent: "Botafogo",
+      match_date: "2026-09-06",
+      competition: "Brasileirão Série A (Nilton Santos)"
+    };
+
     const ELENCO_ATUAL = [
       { name: "Carlos Miguel", pos: "Goleiro" },
       { name: "Marcelo Lomba", pos: "Goleiro" },
@@ -95,21 +162,48 @@
       { name: "Abel Ferreira", pos: "Técnico" }
     ];
 
+    let currentUser = localStorage.getItem('palmeiras_user') || null;
     let currentMatch = null;
     let players = [];
     let ratings = [];
 
-    async function init() {
+    function handleLogin() {
+      const input = document.getElementById('loginInput').value.trim();
+      const match = FRIENDS.find(f => f.toLowerCase() === input.toLowerCase());
+      if (match) {
+        currentUser = match;
+        localStorage.setItem('palmeiras_user', currentUser);
+        checkSession();
+      } else {
+        document.getElementById('loginError').classList.remove('hidden');
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('palmeiras_user');
+      currentUser = null;
+      checkSession();
+    }
+
+    function checkSession() {
+      if (currentUser) {
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('appScreen').classList.remove('hidden');
+        document.getElementById('loggedUserDisplay').textContent = currentUser;
+        initApp();
+      } else {
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('appScreen').classList.add('hidden');
+      }
+    }
+
+    async function initApp() {
+      // Puxa a próxima partida cadastrada ou cria a oficial
       let { data: matches } = await db.from('matches').select('*').order('match_date', { ascending: false }).limit(1);
       
       if (!matches || matches.length === 0) {
-        const { data: newMatch } = await db.from('matches').insert([{ 
-          opponent: 'Próxima Partida', 
-          match_date: new Date().toISOString().split('T')[0], 
-          competition: 'Brasileirão' 
-        }]).select().single();
+        const { data: newMatch } = await db.from('matches').insert([NEXT_MATCH]).select().single();
         currentMatch = newMatch;
-
         const roster = ELENCO_ATUAL.map(p => ({
           match_id: currentMatch.id,
           player_name: p.name,
@@ -133,15 +227,15 @@
 
       renderRateList();
       renderCompareTable();
+      renderRanking();
     }
 
     function renderRateList() {
-      const currentFriend = document.getElementById('friendSelect').value;
       const list = document.getElementById('playersList');
       list.innerHTML = '';
 
       players.forEach(p => {
-        const existing = ratings.find(r => r.match_player_id === p.id && r.friend_name === currentFriend);
+        const existing = ratings.find(r => r.match_player_id === p.id && r.friend_name === currentUser);
         const currentScore = existing ? existing.score : '6.0';
 
         const card = document.createElement('div');
@@ -163,7 +257,6 @@
     }
 
     async function saveRatings() {
-      const currentFriend = document.getElementById('friendSelect').value;
       const btn = document.getElementById('btnSave');
       btn.disabled = true;
       btn.textContent = 'Gravando notas...';
@@ -172,7 +265,7 @@
         const input = document.getElementById(`range-${p.id}`);
         return { 
           match_player_id: p.id, 
-          friend_name: currentFriend, 
+          friend_name: currentUser, 
           score: parseFloat(input ? input.value : 6.0) 
         };
       });
@@ -183,7 +276,7 @@
 
       await loadData();
       btn.disabled = false;
-      btn.textContent = 'Notas Salvas com Sucesso!';
+      btn.textContent = 'Notas Salvas!';
       setTimeout(() => { btn.textContent = 'Salvar Minhas Notas'; }, 2000);
     }
 
@@ -212,22 +305,56 @@
       });
     }
 
-    function switchTab(tab) {
-      if (tab === 'rate') {
-        document.getElementById('viewRate').classList.remove('hidden');
-        document.getElementById('viewCompare').classList.add('hidden');
-        document.getElementById('tabRate').className = "px-5 py-2.5 font-bold rounded-lg bg-emerald-600 text-white";
-        document.getElementById('tabCompare').className = "px-5 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400";
-      } else {
-        document.getElementById('viewRate').classList.add('hidden');
-        document.getElementById('viewCompare').classList.remove('hidden');
-        document.getElementById('tabCompare').className = "px-5 py-2.5 font-bold rounded-lg bg-emerald-600 text-white";
-        document.getElementById('tabRate').className = "px-5 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400";
+    function renderRanking() {
+      const playerStats = players.map(p => {
+        const pRatings = ratings.filter(r => r.match_player_id === p.id);
+        const avg = pRatings.length ? (pRatings.reduce((s, r) => s + Number(r.score), 0) / pRatings.length) : null;
+        return { name: p.player_name, pos: p.position, avg, total: pRatings.length };
+      }).filter(p => p.avg !== null);
+
+      playerStats.sort((a, b) => b.avg - a.avg);
+
+      if (playerStats.length > 0) {
+        const craque = playerStats[0];
+        const bagre = playerStats[playerStats.length - 1];
+
+        document.getElementById('craqueName').textContent = craque.name;
+        document.getElementById('craqueScore').textContent = `Média: ${craque.avg.toFixed(1)} (${craque.total} voto(s))`;
+
+        document.getElementById('bagreName').textContent = bagre.name;
+        document.getElementById('bagreScore').textContent = `Média: ${bagre.avg.toFixed(1)} (${bagre.total} voto(s))`;
       }
+
+      const list = document.getElementById('monthlyRankingList');
+      list.innerHTML = '';
+      playerStats.forEach((p, idx) => {
+        const row = document.createElement('div');
+        row.className = "flex justify-between items-center py-2.5";
+        row.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="font-mono text-xs w-5 text-slate-400">#${idx + 1}</span>
+            <span class="font-bold text-white">${p.name}</span>
+            <span class="text-xs text-slate-500">${p.pos}</span>
+          </div>
+          <span class="font-mono font-black text-emerald-400">${p.avg.toFixed(1)}</span>
+        `;
+        list.appendChild(row);
+      });
     }
 
-    document.getElementById('friendSelect').addEventListener('change', renderRateList);
-    init();
+    function switchTab(tab) {
+      ['rate', 'compare', 'ranking'].forEach(t => {
+        const isSelected = t === tab;
+        document.getElementById(`view${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.toggle('hidden', !isSelected);
+        const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        btn.className = isSelected 
+          ? "px-5 py-2.5 font-bold rounded-lg bg-emerald-600 text-white" 
+          : "px-5 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400";
+      });
+    }
+
+    // Iniciar
+    checkSession();
   </script>
 </body>
 </html>

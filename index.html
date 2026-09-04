@@ -68,7 +68,8 @@
 
     const FRIENDS = ["Celão", "Danão", "Bona", "Gabão", "Calango"];
 
-    const ELENCO_PALMEIRAS = [
+    // Apenas atletas que pertencem ao elenco atual
+    const ELENCO_ATUAL = [
       { name: "Carlos Miguel", pos: "Goleiro" },
       { name: "Marcelo Lomba", pos: "Goleiro" },
       { name: "Gustavo Gómez", pos: "Zagueiro" },
@@ -79,9 +80,10 @@
       { name: "Khellven", pos: "Lateral" },
       { name: "Agustín Giay", pos: "Lateral" },
       { name: "Jefté", pos: "Lateral" },
-      { name: "Andreas Pereira", pos: "Meia" },
+      { name: "Aníbal Moreno", pos: "Volante" },
       { name: "Marlon Freitas", pos: "Volante" },
       { name: "Emiliano Martínez", pos: "Volante" },
+      { name: "Andreas Pereira", pos: "Meia" },
       { name: "Mauricio", pos: "Meia" },
       { name: "Lucas Evangelista", pos: "Meia" },
       { name: "Felipe Anderson", pos: "Meia/Atacante" },
@@ -98,7 +100,6 @@
     let ratings = [];
 
     async function init() {
-      // Busca a partida ativa mais recente
       let { data: matches } = await db.from('matches').select('*').order('match_date', { ascending: false }).limit(1);
       
       if (!matches || matches.length === 0) {
@@ -109,7 +110,7 @@
         }]).select().single();
         currentMatch = newMatch;
 
-        const roster = ELENCO_PALMEIRAS.map(p => ({
+        const roster = ELENCO_ATUAL.map(p => ({
           match_id: currentMatch.id,
           player_name: p.name,
           position: p.pos
@@ -117,18 +118,6 @@
         await db.from('match_players').insert(roster);
       } else {
         currentMatch = matches[0];
-        
-        // Garante que o elenco cadastrado esteja sincronizado com o atual
-        const { data: existingP } = await db.from('match_players').select('player_name').eq('match_id', currentMatch.id);
-        const existingNames = (existingP || []).map(p => p.player_name);
-        const missing = ELENCO_PALMEIRAS.filter(p => !existingNames.includes(p.name)).map(p => ({
-          match_id: currentMatch.id,
-          player_name: p.name,
-          position: p.pos
-        }));
-        if (missing.length > 0) {
-          await db.from('match_players').insert(missing);
-        }
       }
 
       document.getElementById('matchInfo').textContent = `Palmeiras vs ${currentMatch.opponent} • ${currentMatch.competition}`;

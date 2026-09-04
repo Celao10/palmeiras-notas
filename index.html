@@ -9,6 +9,7 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
 
+  <!-- TELA DE LOGIN -->
   <div id="loginScreen" class="min-h-[80vh] flex items-center justify-center">
     <div class="bg-slate-800 p-8 rounded-2xl border border-emerald-500/40 shadow-2xl max-w-md w-full text-center space-y-6">
       <div class="w-16 h-16 bg-emerald-700/40 border border-emerald-500 rounded-full flex items-center justify-center mx-auto text-3xl">
@@ -22,14 +23,16 @@
         <input id="loginInput" type="text" placeholder="Ex: Celão, Danão, Bona..." 
                class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl px-4 py-3 text-center text-lg font-bold text-white focus:outline-none focus:ring-2 focus:ring-emerald-400">
         <p id="loginError" class="text-rose-400 text-xs hidden font-semibold">Nome não autorizado. Use: Celão, Danão, Bona, Gabão ou Calango.</p>
-        <button onclick="handleLogin()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-base rounded-xl shadow-lg transition">
+        <button id="btnLogin" onclick="handleLogin()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-base rounded-xl shadow-lg transition">
           Entrar
         </button>
       </div>
     </div>
   </div>
 
+  <!-- APLICAÇÃO PRINCIPAL -->
   <div id="appScreen" class="max-w-4xl mx-auto space-y-6 hidden">
+    <!-- Header -->
     <header class="bg-emerald-800 p-6 rounded-2xl shadow-lg border border-emerald-600 flex flex-col md:flex-row justify-between items-center gap-4">
       <div>
         <h1 class="text-3xl font-black tracking-wide text-white">NOTAS DO VERDÃO 🐷</h1>
@@ -66,6 +69,7 @@
       </div>
     </header>
 
+    <!-- Abas -->
     <div class="flex flex-wrap gap-2 border-b border-slate-700 pb-2">
       <button id="tabRate" onclick="switchTab('rate')" class="px-5 py-2.5 font-bold rounded-lg bg-emerald-600 text-white">
         Avaliar Partida
@@ -78,6 +82,7 @@
       </button>
     </div>
 
+    <!-- Aba 1: Avaliação -->
     <main id="viewRate" class="space-y-4">
       <div id="playersList" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
       <button id="btnSave" onclick="saveRatings()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-lg rounded-xl shadow-lg transition">
@@ -85,6 +90,7 @@
       </button>
     </main>
 
+    <!-- Aba 2: Comparativo -->
     <main id="viewCompare" class="hidden">
       <div class="overflow-x-auto bg-slate-800 rounded-xl border border-slate-700">
         <table class="w-full text-left border-collapse">
@@ -105,6 +111,7 @@
       </div>
     </main>
 
+    <!-- Aba 3: Ranking -->
     <main id="viewRanking" class="hidden space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="bg-gradient-to-br from-emerald-900/60 to-slate-800 border-2 border-emerald-500/50 p-6 rounded-2xl flex items-center gap-4">
@@ -133,6 +140,7 @@
     </main>
   </div>
 
+  <!-- MODAL DE NOVO JOGO -->
   <div id="newMatchModal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-50">
     <div class="bg-slate-800 p-6 rounded-2xl border border-emerald-500 max-w-md w-full space-y-4">
       <h3 class="text-xl font-black text-white">Cadastrar Próximo Jogo ⚽</h3>
@@ -193,4 +201,360 @@
       { name: "Jhon Arias", pos: "Atacante" },
       { name: "Paulinho", pos: "Atacante" },
       { name: "Ramón Sosa", pos: "Atacante" },
-      { name: "
+      { name: "Vitor Roque", pos: "Atacante" },
+      { name: "Flaco López", pos: "Atacante" },
+      { name: "Abel Ferreira", pos: "Técnico" }
+    ];
+
+    let currentUser = localStorage.getItem('palmeiras_user') || null;
+    let allMatches = [];
+    let currentMatchId = null;
+    let players = [];
+    let ratings = [];
+
+    // Normaliza strings (remove acentos e deixa minúsculo)
+    function cleanStr(str) {
+      return (str || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    function handleLogin() {
+      const input = document.getElementById('loginInput').value;
+      const cleaned = cleanStr(input);
+      
+      const match = FRIENDS.find(f => cleanStr(f) === cleaned);
+      if (match) {
+        currentUser = match;
+        localStorage.setItem('palmeiras_user', currentUser);
+        document.getElementById('loginError').classList.add('hidden');
+        checkSession();
+      } else {
+        document.getElementById('loginError').classList.remove('hidden');
+      }
+    }
+
+    // Permite apertar Enter no campo de login
+    document.getElementById('loginInput').addEventListener('keyup', function(e) {
+      if (e.key === 'Enter') handleLogin();
+    });
+
+    function logout() {
+      localStorage.removeItem('palmeiras_user');
+      currentUser = null;
+      document.getElementById('loginInput').value = '';
+      checkSession();
+    }
+
+    function checkSession() {
+      if (currentUser) {
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('appScreen').classList.remove('hidden');
+        document.getElementById('loggedUserDisplay').textContent = currentUser;
+
+        const isCelao = cleanStr(currentUser) === 'celao';
+        const toggleContainer = document.getElementById('adminToggleContainer');
+        if (isCelao) {
+          toggleContainer.classList.remove('hidden');
+          toggleContainer.classList.add('flex');
+        } else {
+          toggleContainer.classList.add('hidden');
+          toggleContainer.classList.remove('flex');
+        }
+
+        toggleAdminMode();
+        initApp();
+      } else {
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('appScreen').classList.add('hidden');
+      }
+    }
+
+    function toggleAdminMode() {
+      const adminSwitch = document.getElementById('adminSwitch');
+      const adminGroup = document.getElementById('adminActionGroup');
+      const isCelao = currentUser && cleanStr(currentUser) === 'celao';
+
+      if (isCelao && adminSwitch && adminSwitch.checked) {
+        adminGroup.classList.remove('hidden');
+        adminGroup.classList.add('flex');
+      } else {
+        adminGroup.classList.add('hidden');
+        adminGroup.classList.remove('flex');
+      }
+    }
+
+    async function initApp() {
+      try {
+        let { data: matches, error } = await db.from('matches').select('*').order('match_date', { ascending: false });
+        if (error) throw error;
+        
+        if (!matches || matches.length === 0) {
+          const { data: newMatch } = await db.from('matches').insert([INITIAL_MATCH]).select().single();
+          allMatches = [newMatch];
+          currentMatchId = newMatch.id;
+          const roster = ELENCO_ATUAL.map(p => ({
+            match_id: newMatch.id,
+            player_name: p.name,
+            position: p.pos
+          }));
+          await db.from('match_players').insert(roster);
+        } else {
+          allMatches = matches;
+          if (!currentMatchId) {
+            currentMatchId = matches[0].id;
+          }
+        }
+
+        renderMatchSelect();
+        await loadData();
+      } catch (err) {
+        console.error("Erro ao inicializar app:", err);
+      }
+    }
+
+    function renderMatchSelect() {
+      const select = document.getElementById('matchSelect');
+      select.innerHTML = '';
+      allMatches.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = `Palmeiras vs ${m.opponent} (${m.competition})`;
+        if (m.id === currentMatchId) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    async function onSelectMatch() {
+      currentMatchId = document.getElementById('matchSelect').value;
+      await loadData();
+    }
+
+    function openNewMatchModal() {
+      document.getElementById('newMatchModal').classList.remove('hidden');
+      document.getElementById('modalOpponent').value = '';
+      document.getElementById('modalCompetition').value = '';
+    }
+
+    function closeNewMatchModal() {
+      document.getElementById('newMatchModal').classList.add('hidden');
+    }
+
+    async function createMatchSubmit() {
+      const opp = document.getElementById('modalOpponent').value.trim();
+      const comp = document.getElementById('modalCompetition').value.trim();
+      if (!opp) return alert('Por favor, informe o adversário.');
+
+      const btn = document.getElementById('btnCreateMatch');
+      btn.disabled = true;
+      btn.textContent = 'Criando...';
+
+      const { data: newMatch } = await db.from('matches').insert([{
+        opponent: opp,
+        competition: comp || 'Brasileirão',
+        match_date: new Date().toISOString().split('T')[0]
+      }]).select().single();
+
+      const roster = ELENCO_ATUAL.map(p => ({
+        match_id: newMatch.id,
+        player_name: p.name,
+        position: p.pos
+      }));
+      await db.from('match_players').insert(roster);
+
+      currentMatchId = newMatch.id;
+      btn.disabled = false;
+      btn.textContent = 'Publicar Jogo';
+      closeNewMatchModal();
+      await initApp();
+    }
+
+    async function loadData() {
+      try {
+        const { data: pData } = await db.from('match_players').select('*').eq('match_id', currentMatchId);
+        players = pData || [];
+
+        const { data: rData } = await db.from('ratings').select('*');
+        ratings = rData || [];
+
+        renderRateList();
+        renderCompareTable();
+        renderRanking();
+      } catch (err) {
+        console.error("Erro ao carregar dados:", err);
+      }
+    }
+
+    function togglePlayedStatus(playerId) {
+      const chk = document.getElementById(`chk-${playerId}`);
+      const range = document.getElementById(`range-${playerId}`);
+      const val = document.getElementById(`val-${playerId}`);
+
+      if (chk.checked) {
+        range.disabled = false;
+        range.classList.remove('opacity-30', 'cursor-not-allowed');
+        val.textContent = Number(range.value).toFixed(1);
+        val.classList.remove('text-slate-500');
+        val.classList.add('text-emerald-400');
+      } else {
+        range.disabled = true;
+        range.classList.add('opacity-30', 'cursor-not-allowed');
+        val.textContent = 'S/N';
+        val.classList.remove('text-emerald-400');
+        val.classList.add('text-slate-500');
+      }
+    }
+
+    function renderRateList() {
+      const list = document.getElementById('playersList');
+      list.innerHTML = '';
+
+      players.forEach(p => {
+        const existing = ratings.find(r => r.match_player_id === p.id && r.friend_name === currentUser);
+        const hasScore = existing && existing.score !== null && existing.score !== -1;
+        const currentScore = hasScore ? existing.score : '6.0';
+        const isPlayed = hasScore || !existing;
+
+        const card = document.createElement('div');
+        card.className = "bg-slate-800/80 p-4 rounded-xl border border-slate-700 flex flex-col justify-between gap-3";
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="font-bold text-base text-white">${p.player_name}</span>
+              <span class="text-xs font-semibold px-2 py-0.5 ml-2 bg-slate-700 text-slate-300 rounded">${p.position}</span>
+            </div>
+            <label class="flex items-center gap-1.5 cursor-pointer select-none text-xs text-slate-300 bg-slate-900/60 px-2 py-1 rounded border border-slate-700">
+              <input type="checkbox" id="chk-${p.id}" ${isPlayed ? 'checked' : ''} onchange="togglePlayedStatus('${p.id}')" class="accent-emerald-500">
+              <span>Jogou</span>
+            </label>
+          </div>
+          <div class="flex items-center justify-between gap-3 pt-2 border-t border-slate-700/50">
+            <input type="range" min="0" max="10" step="0.5" value="${currentScore}" id="range-${p.id}" 
+                   class="w-full accent-emerald-500 cursor-pointer ${isPlayed ? '' : 'opacity-30 cursor-not-allowed'}" 
+                   ${isPlayed ? '' : 'disabled'}
+                   oninput="document.getElementById('val-${p.id}').textContent = Number(this.value).toFixed(1)">
+            <span id="val-${p.id}" class="text-lg font-black min-w-[2.5rem] text-right ${isPlayed ? 'text-emerald-400' : 'text-slate-500'}">
+              ${isPlayed ? Number(currentScore).toFixed(1) : 'S/N'}
+            </span>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    async function saveRatings() {
+      const btn = document.getElementById('btnSave');
+      btn.disabled = true;
+      btn.textContent = 'Gravando notas...';
+
+      const updates = players.map(p => {
+        const chk = document.getElementById(`chk-${p.id}`);
+        const input = document.getElementById(`range-${p.id}`);
+        const didPlay = chk ? chk.checked : true;
+
+        return { 
+          match_player_id: p.id, 
+          friend_name: currentUser, 
+          score: didPlay ? parseFloat(input ? input.value : 6.0) : -1
+        };
+      });
+
+      for (const item of updates) {
+        await db.from('ratings').upsert(item, { onConflict: 'match_player_id,friend_name' });
+      }
+
+      await loadData();
+      btn.disabled = false;
+      btn.textContent = 'Notas Salvas!';
+      setTimeout(() => { btn.textContent = 'Salvar Minhas Notas'; }, 2000);
+    }
+
+    function renderCompareTable() {
+      const tbody = document.getElementById('compareTableBody');
+      tbody.innerHTML = '';
+
+      players.forEach(p => {
+        const validRatings = ratings.filter(r => r.match_player_id === p.id && r.score !== null && Number(r.score) >= 0);
+        const avg = validRatings.length ? (validRatings.reduce((sum, r) => sum + Number(r.score), 0) / validRatings.length).toFixed(1) : '-';
+
+        let friendCols = '';
+        FRIENDS.forEach(f => {
+          const r = ratings.find(item => item.match_player_id === p.id && item.friend_name === f);
+          const hasPlayed = r && Number(r.score) >= 0;
+          const displayScore = hasPlayed ? Number(r.score).toFixed(1) : (r && Number(r.score) === -1 ? 'S/N' : '-');
+          friendCols += `<td class="p-3 text-center font-mono ${hasPlayed ? 'text-white font-bold' : 'text-slate-500'}">${displayScore}</td>`;
+        });
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-3 font-semibold text-white">${p.player_name}</td>
+          <td class="p-3 text-slate-400 text-xs">${p.position}</td>
+          <td class="p-3 text-emerald-400 font-black text-base">${avg}</td>
+          ${friendCols}
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function renderRanking() {
+      const { data: allPlayersData } = await db.from('match_players').select('id, player_name, position');
+      const allP = allPlayersData || [];
+
+      const grouped = {};
+      allP.forEach(p => {
+        if (!grouped[p.player_name]) {
+          grouped[p.player_name] = { name: p.player_name, pos: p.position, scores: [] };
+        }
+        const pRatings = ratings.filter(r => r.match_player_id === p.id && r.score !== null && Number(r.score) >= 0);
+        pRatings.forEach(r => grouped[p.player_name].scores.push(Number(r.score)));
+      });
+
+      const stats = Object.values(grouped).map(item => {
+        const total = item.scores.length;
+        const avg = total > 0 ? (item.scores.reduce((a, b) => a + b, 0) / total) : null;
+        return { name: item.name, pos: item.pos, avg, total };
+      }).filter(item => item.avg !== null);
+
+      stats.sort((a, b) => b.avg - a.avg);
+
+      if (stats.length > 0) {
+        const craque = stats[0];
+        const bagre = stats[stats.length - 1];
+
+        document.getElementById('craqueName').textContent = craque.name;
+        document.getElementById('craqueScore').textContent = `Média: ${craque.avg.toFixed(1)} (${craque.total} voto(s))`;
+
+        document.getElementById('bagreName').textContent = bagre.name;
+        document.getElementById('bagreScore').textContent = `Média: ${bagre.avg.toFixed(1)} (${bagre.total} voto(s))`;
+      }
+
+      const list = document.getElementById('monthlyRankingList');
+      list.innerHTML = '';
+      stats.forEach((p, idx) => {
+        const row = document.createElement('div');
+        row.className = "flex justify-between items-center py-2.5";
+        row.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="font-mono text-xs w-5 text-slate-400">#${idx + 1}</span>
+            <span class="font-bold text-white">${p.name}</span>
+            <span class="text-xs text-slate-500">${p.pos} (${p.total} avaliações)</span>
+          </div>
+          <span class="font-mono font-black text-emerald-400">${p.avg.toFixed(1)}</span>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    function switchTab(tab) {
+      ['rate', 'compare', 'ranking'].forEach(t => {
+        const isSelected = t === tab;
+        document.getElementById(`view${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.toggle('hidden', !isSelected);
+        const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        btn.className = isSelected 
+          ? "px-5 py-2.5 font-bold rounded-lg bg-emerald-600 text-white" 
+          : "px-5 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400";
+      });
+    }
+
+    checkSession();
+  </script>
+</body>
+</html>

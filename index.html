@@ -10,7 +10,7 @@
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
 
   <!-- TELA DE LOGIN -->
-  <div id="loginScreen" class="min-h-[80vh] flex items-center justify-center">
+  <div id="loginScreen" style="display: flex;" class="min-h-[80vh] items-center justify-center">
     <div class="bg-slate-800 p-8 rounded-2xl border border-emerald-500/40 shadow-2xl max-w-md w-full text-center space-y-6">
       <div class="w-16 h-16 bg-emerald-700/40 border border-emerald-500 rounded-full flex items-center justify-center mx-auto text-3xl">
         🐷
@@ -22,7 +22,7 @@
       <div class="space-y-3">
         <input id="loginInput" type="text" placeholder="Ex: Celão, Danão, Bona..." 
                class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl px-4 py-3 text-center text-lg font-bold text-white focus:outline-none focus:ring-2 focus:ring-emerald-400">
-        <p id="loginError" class="text-rose-400 text-xs hidden font-semibold">Nome não autorizado. Use: Celão, Danão, Bona, Gabão ou Calango.</p>
+        <p id="loginError" style="display: none;" class="text-rose-400 text-xs font-semibold">Nome não autorizado. Use: Celão, Danão, Bona, Gabão ou Calango.</p>
         <button id="btnLogin" onclick="handleLogin()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-base rounded-xl shadow-lg transition">
           Entrar
         </button>
@@ -31,7 +31,7 @@
   </div>
 
   <!-- APLICAÇÃO PRINCIPAL -->
-  <div id="appScreen" class="max-w-4xl mx-auto space-y-6 hidden">
+  <div id="appScreen" style="display: none;" class="max-w-4xl mx-auto space-y-6">
     <!-- Header -->
     <header class="bg-emerald-800 p-6 rounded-2xl shadow-lg border border-emerald-600 flex flex-col md:flex-row justify-between items-center gap-4">
       <div>
@@ -40,7 +40,8 @@
           <select id="matchSelect" onchange="onSelectMatch()" class="bg-emerald-950/80 text-white font-semibold text-sm border border-emerald-500/60 rounded-lg px-3 py-1.5 focus:outline-none">
           </select>
           
-          <div id="adminActionGroup" class="hidden items-center gap-2">
+          <!-- Botão Novo Jogo exclusivo para Celão com Modo Admin ativo -->
+          <div id="adminActionGroup" style="display: none;" class="items-center gap-2">
             <button onclick="openNewMatchModal()" class="bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black text-xs px-3 py-1.5 rounded-lg shadow transition">
               + Novo Jogo
             </button>
@@ -59,7 +60,8 @@
           </button>
         </div>
 
-        <div id="adminToggleContainer" class="hidden items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 text-xs">
+        <!-- Alavanca / Switch de Modo Admin (visível apenas para Celão) -->
+        <div id="adminToggleContainer" style="display: none;" class="items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 text-xs">
           <span class="text-slate-300 font-semibold">Modo Admin</span>
           <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" id="adminSwitch" onchange="toggleAdminMode()" class="sr-only peer">
@@ -69,7 +71,7 @@
       </div>
     </header>
 
-    <!-- Abas -->
+    <!-- Abas de Navegação -->
     <div class="flex flex-wrap gap-2 border-b border-slate-700 pb-2">
       <button id="tabRate" onclick="switchTab('rate')" class="px-5 py-2.5 font-bold rounded-lg bg-emerald-600 text-white">
         Avaliar Partida
@@ -91,7 +93,7 @@
     </main>
 
     <!-- Aba 2: Comparativo -->
-    <main id="viewCompare" class="hidden">
+    <main id="viewCompare" style="display: none;">
       <div class="overflow-x-auto bg-slate-800 rounded-xl border border-slate-700">
         <table class="w-full text-left border-collapse">
           <thead>
@@ -112,7 +114,7 @@
     </main>
 
     <!-- Aba 3: Ranking -->
-    <main id="viewRanking" class="hidden space-y-6">
+    <main id="viewRanking" style="display: none;" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="bg-gradient-to-br from-emerald-900/60 to-slate-800 border-2 border-emerald-500/50 p-6 rounded-2xl flex items-center gap-4">
           <div class="text-4xl">🌟</div>
@@ -141,7 +143,7 @@
   </div>
 
   <!-- MODAL DE NOVO JOGO -->
-  <div id="newMatchModal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-50">
+  <div id="newMatchModal" style="display: none;" class="fixed inset-0 bg-black/80 items-center justify-center p-4 z-50">
     <div class="bg-slate-800 p-6 rounded-2xl border border-emerald-500 max-w-md w-full space-y-4">
       <h3 class="text-xl font-black text-white">Cadastrar Próximo Jogo ⚽</h3>
       <div class="space-y-3">
@@ -212,7 +214,6 @@
     let players = [];
     let ratings = [];
 
-    // Normaliza strings (remove acentos e deixa minúsculo)
     function cleanStr(str) {
       return (str || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     }
@@ -220,19 +221,18 @@
     function handleLogin() {
       const input = document.getElementById('loginInput').value;
       const cleaned = cleanStr(input);
-      
       const match = FRIENDS.find(f => cleanStr(f) === cleaned);
+
       if (match) {
         currentUser = match;
         localStorage.setItem('palmeiras_user', currentUser);
-        document.getElementById('loginError').classList.add('hidden');
+        document.getElementById('loginError').style.display = 'none';
         checkSession();
       } else {
-        document.getElementById('loginError').classList.remove('hidden');
+        document.getElementById('loginError').style.display = 'block';
       }
     }
 
-    // Permite apertar Enter no campo de login
     document.getElementById('loginInput').addEventListener('keyup', function(e) {
       if (e.key === 'Enter') handleLogin();
     });
@@ -245,26 +245,23 @@
     }
 
     function checkSession() {
+      const loginScreen = document.getElementById('loginScreen');
+      const appScreen = document.getElementById('appScreen');
+      const adminToggleContainer = document.getElementById('adminToggleContainer');
+
       if (currentUser) {
-        document.getElementById('loginScreen').classList.add('hidden');
-        document.getElementById('appScreen').classList.remove('hidden');
+        loginScreen.style.display = 'none';
+        appScreen.style.display = 'block';
         document.getElementById('loggedUserDisplay').textContent = currentUser;
 
         const isCelao = cleanStr(currentUser) === 'celao';
-        const toggleContainer = document.getElementById('adminToggleContainer');
-        if (isCelao) {
-          toggleContainer.classList.remove('hidden');
-          toggleContainer.classList.add('flex');
-        } else {
-          toggleContainer.classList.add('hidden');
-          toggleContainer.classList.remove('flex');
-        }
+        adminToggleContainer.style.display = isCelao ? 'flex' : 'none';
 
         toggleAdminMode();
         initApp();
       } else {
-        document.getElementById('loginScreen').classList.remove('hidden');
-        document.getElementById('appScreen').classList.add('hidden');
+        loginScreen.style.display = 'flex';
+        appScreen.style.display = 'none';
       }
     }
 
@@ -274,18 +271,16 @@
       const isCelao = currentUser && cleanStr(currentUser) === 'celao';
 
       if (isCelao && adminSwitch && adminSwitch.checked) {
-        adminGroup.classList.remove('hidden');
-        adminGroup.classList.add('flex');
+        adminGroup.style.display = 'flex';
       } else {
-        adminGroup.classList.add('hidden');
-        adminGroup.classList.remove('flex');
+        adminGroup.style.display = 'none';
       }
     }
 
     async function initApp() {
       try {
         let { data: matches, error } = await db.from('matches').select('*').order('match_date', { ascending: false });
-        if (error) throw error;
+        if (error) console.error(error);
         
         if (!matches || matches.length === 0) {
           const { data: newMatch } = await db.from('matches').insert([INITIAL_MATCH]).select().single();
@@ -307,7 +302,7 @@
         renderMatchSelect();
         await loadData();
       } catch (err) {
-        console.error("Erro ao inicializar app:", err);
+        console.error("Erro no initApp:", err);
       }
     }
 
@@ -329,13 +324,13 @@
     }
 
     function openNewMatchModal() {
-      document.getElementById('newMatchModal').classList.remove('hidden');
+      document.getElementById('newMatchModal').style.display = 'flex';
       document.getElementById('modalOpponent').value = '';
       document.getElementById('modalCompetition').value = '';
     }
 
     function closeNewMatchModal() {
-      document.getElementById('newMatchModal').classList.add('hidden');
+      document.getElementById('newMatchModal').style.display = 'none';
     }
 
     async function createMatchSubmit() {
@@ -379,7 +374,7 @@
         renderCompareTable();
         renderRanking();
       } catch (err) {
-        console.error("Erro ao carregar dados:", err);
+        console.error("Erro no loadData:", err);
       }
     }
 
@@ -544,9 +539,12 @@
     }
 
     function switchTab(tab) {
+      document.getElementById('viewRate').style.display = tab === 'rate' ? 'block' : 'none';
+      document.getElementById('viewCompare').style.display = tab === 'compare' ? 'block' : 'none';
+      document.getElementById('viewRanking').style.display = tab === 'ranking' ? 'block' : 'none';
+
       ['rate', 'compare', 'ranking'].forEach(t => {
         const isSelected = t === tab;
-        document.getElementById(`view${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.toggle('hidden', !isSelected);
         const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
         btn.className = isSelected 
           ? "px-5 py-2.5 font-bold rounded-lg bg-emerald-600 text-white" 
@@ -554,6 +552,7 @@
       });
     }
 
+    // Inicialização
     checkSession();
   </script>
 </body>

@@ -36,19 +36,33 @@
         <div class="flex items-center gap-2 mt-2">
           <select id="matchSelect" onchange="onSelectMatch()" class="bg-emerald-950/80 text-white font-semibold text-sm border border-emerald-500/60 rounded-lg px-3 py-1.5 focus:outline-none">
           </select>
-          <button id="adminNewMatchBtn" onclick="openNewMatchModal()" class="hidden bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-black text-xs px-3 py-1.5 rounded-lg shadow transition">
-            + Novo Jogo
-          </button>
+          
+          <div id="adminActionGroup" class="hidden items-center gap-2">
+            <button onclick="openNewMatchModal()" class="bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black text-xs px-3 py-1.5 rounded-lg shadow transition">
+              + Novo Jogo
+            </button>
+          </div>
         </div>
       </div>
-      <div class="flex items-center gap-3 bg-emerald-950/70 px-4 py-2 rounded-xl border border-emerald-500/40">
-        <div class="text-right">
-          <span class="text-xs text-emerald-300 block">Logado como:</span>
-          <span id="loggedUserDisplay" class="font-extrabold text-white text-base"></span>
+
+      <div class="flex flex-col items-end gap-2">
+        <div class="flex items-center gap-3 bg-emerald-950/70 px-4 py-2 rounded-xl border border-emerald-500/40">
+          <div class="text-right">
+            <span class="text-xs text-emerald-300 block">Logado como:</span>
+            <span id="loggedUserDisplay" class="font-extrabold text-white text-base"></span>
+          </div>
+          <button onclick="logout()" class="text-xs bg-red-500/20 hover:bg-red-500/40 text-red-300 px-2 py-1 rounded border border-red-500/30">
+            Sair
+          </button>
         </div>
-        <button onclick="logout()" class="text-xs bg-red-500/20 hover:bg-red-500/40 text-red-300 px-2 py-1 rounded border border-red-500/30">
-          Sair
-        </button>
+
+        <div id="adminToggleContainer" class="hidden items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 text-xs">
+          <span class="text-slate-300 font-semibold">Modo Admin</span>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="adminSwitch" onchange="toggleAdminMode()" class="sr-only peer">
+            <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+          </label>
+        </div>
       </div>
     </header>
 
@@ -125,12 +139,12 @@
       <div class="space-y-3">
         <div>
           <label class="text-xs text-slate-300 font-semibold block mb-1">Adversário:</label>
-          <input id="modalOpponent" type="text" placeholder="Ex: Corinthians, Flamengo, São Paulo..." 
+          <input id="modalOpponent" type="text" placeholder="Ex: Corinthians, Flamengo..." 
                  class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white font-bold focus:border-emerald-500 focus:outline-none">
         </div>
         <div>
           <label class="text-xs text-slate-300 font-semibold block mb-1">Competição / Detalhes:</label>
-          <input id="modalCompetition" type="text" placeholder="Ex: Brasileirão, Libertadores, Allianz Parque..." 
+          <input id="modalCompetition" type="text" placeholder="Ex: Brasileirão, Allianz Parque..." 
                  class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white font-bold focus:border-emerald-500 focus:outline-none">
         </div>
       </div>
@@ -179,284 +193,4 @@
       { name: "Jhon Arias", pos: "Atacante" },
       { name: "Paulinho", pos: "Atacante" },
       { name: "Ramón Sosa", pos: "Atacante" },
-      { name: "Vitor Roque", pos: "Atacante" },
-      { name: "Flaco López", pos: "Atacante" },
-      { name: "Abel Ferreira", pos: "Técnico" }
-    ];
-
-    let currentUser = localStorage.getItem('palmeiras_user') || null;
-    let allMatches = [];
-    let currentMatchId = null;
-    let players = [];
-    let ratings = [];
-
-    function handleLogin() {
-      const input = document.getElementById('loginInput').value.trim();
-      const match = FRIENDS.find(f => f.toLowerCase() === input.toLowerCase());
-      if (match) {
-        currentUser = match;
-        localStorage.setItem('palmeiras_user', currentUser);
-        checkSession();
-      } else {
-        document.getElementById('loginError').classList.remove('hidden');
-      }
-    }
-
-    function logout() {
-      localStorage.removeItem('palmeiras_user');
-      currentUser = null;
-      checkSession();
-    }
-
-    function checkSession() {
-      if (currentUser) {
-        document.getElementById('loginScreen').classList.add('hidden');
-        document.getElementById('appScreen').classList.remove('hidden');
-        document.getElementById('loggedUserDisplay').textContent = currentUser;
-
-        // Se for Celão, exibe o botão de criar partida
-        if (currentUser.toLowerCase() === 'celão' || currentUser.toLowerCase() === 'celao') {
-          document.getElementById('adminNewMatchBtn').classList.remove('hidden');
-        } else {
-          document.getElementById('adminNewMatchBtn').classList.add('hidden');
-        }
-
-        initApp();
-      } else {
-        document.getElementById('loginScreen').classList.remove('hidden');
-        document.getElementById('appScreen').classList.add('hidden');
-      }
-    }
-
-    async function initApp() {
-      let { data: matches } = await db.from('matches').select('*').order('match_date', { ascending: false });
-      
-      if (!matches || matches.length === 0) {
-        const { data: newMatch } = await db.from('matches').insert([INITIAL_MATCH]).select().single();
-        allMatches = [newMatch];
-        currentMatchId = newMatch.id;
-        const roster = ELENCO_ATUAL.map(p => ({
-          match_id: newMatch.id,
-          player_name: p.name,
-          position: p.pos
-        }));
-        await db.from('match_players').insert(roster);
-      } else {
-        allMatches = matches;
-        if (!currentMatchId) {
-          currentMatchId = matches[0].id;
-        }
-      }
-
-      renderMatchSelect();
-      await loadData();
-    }
-
-    function renderMatchSelect() {
-      const select = document.getElementById('matchSelect');
-      select.innerHTML = '';
-      allMatches.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m.id;
-        opt.textContent = `Palmeiras vs ${m.opponent} (${m.competition})`;
-        if (m.id === currentMatchId) opt.selected = true;
-        select.appendChild(opt);
-      });
-    }
-
-    async function onSelectMatch() {
-      currentMatchId = document.getElementById('matchSelect').value;
-      await loadData();
-    }
-
-    function openNewMatchModal() {
-      document.getElementById('newMatchModal').classList.remove('hidden');
-      document.getElementById('modalOpponent').value = '';
-      document.getElementById('modalCompetition').value = '';
-    }
-
-    function closeNewMatchModal() {
-      document.getElementById('newMatchModal').classList.add('hidden');
-    }
-
-    async function createMatchSubmit() {
-      const opp = document.getElementById('modalOpponent').value.trim();
-      const comp = document.getElementById('modalCompetition').value.trim();
-      if (!opp) return alert('Por favor, informe o adversário.');
-
-      const btn = document.getElementById('btnCreateMatch');
-      btn.disabled = true;
-      btn.textContent = 'Criando...';
-
-      const { data: newMatch } = await db.from('matches').insert([{
-        opponent: opp,
-        competition: comp || 'Brasileirão',
-        match_date: new Date().toISOString().split('T')[0]
-      }]).select().single();
-
-      const roster = ELENCO_ATUAL.map(p => ({
-        match_id: newMatch.id,
-        player_name: p.name,
-        position: p.pos
-      }));
-      await db.from('match_players').insert(roster);
-
-      currentMatchId = newMatch.id;
-      btn.disabled = false;
-      btn.textContent = 'Publicar Jogo';
-      closeNewMatchModal();
-      await initApp();
-    }
-
-    async function loadData() {
-      const { data: pData } = await db.from('match_players').select('*').eq('match_id', currentMatchId);
-      players = pData || [];
-
-      const { data: rData } = await db.from('ratings').select('*');
-      ratings = rData || [];
-
-      renderRateList();
-      renderCompareTable();
-      renderRanking();
-    }
-
-    function renderRateList() {
-      const list = document.getElementById('playersList');
-      list.innerHTML = '';
-
-      players.forEach(p => {
-        const existing = ratings.find(r => r.match_player_id === p.id && r.friend_name === currentUser);
-        const currentScore = existing ? existing.score : '6.0';
-
-        const card = document.createElement('div');
-        card.className = "bg-slate-800/80 p-4 rounded-xl border border-slate-700 flex flex-col justify-between gap-3";
-        card.innerHTML = `
-          <div class="flex items-center justify-between">
-            <span class="font-bold text-base text-white">${p.player_name}</span>
-            <span class="text-xs font-semibold px-2 py-0.5 bg-slate-700 text-slate-300 rounded">${p.position}</span>
-          </div>
-          <div class="flex items-center justify-between gap-3 pt-2 border-t border-slate-700/50">
-            <input type="range" min="0" max="10" step="0.5" value="${currentScore}" id="range-${p.id}" 
-                   class="w-full accent-emerald-500 cursor-pointer" 
-                   oninput="document.getElementById('val-${p.id}').textContent = Number(this.value).toFixed(1)">
-            <span id="val-${p.id}" class="text-lg font-black text-emerald-400 min-w-[2.5rem] text-right">${Number(currentScore).toFixed(1)}</span>
-          </div>
-        `;
-        list.appendChild(card);
-      });
-    }
-
-    async function saveRatings() {
-      const btn = document.getElementById('btnSave');
-      btn.disabled = true;
-      btn.textContent = 'Gravando notas...';
-
-      const updates = players.map(p => {
-        const input = document.getElementById(`range-${p.id}`);
-        return { 
-          match_player_id: p.id, 
-          friend_name: currentUser, 
-          score: parseFloat(input ? input.value : 6.0) 
-        };
-      });
-
-      for (const item of updates) {
-        await db.from('ratings').upsert(item, { onConflict: 'match_player_id,friend_name' });
-      }
-
-      await loadData();
-      btn.disabled = false;
-      btn.textContent = 'Notas Salvas!';
-      setTimeout(() => { btn.textContent = 'Salvar Minhas Notas'; }, 2000);
-    }
-
-    function renderCompareTable() {
-      const tbody = document.getElementById('compareTableBody');
-      tbody.innerHTML = '';
-
-      players.forEach(p => {
-        const pRatings = ratings.filter(r => r.match_player_id === p.id);
-        const avg = pRatings.length ? (pRatings.reduce((sum, r) => sum + Number(r.score), 0) / pRatings.length).toFixed(1) : '-';
-
-        let friendCols = '';
-        FRIENDS.forEach(f => {
-          const r = pRatings.find(item => item.friend_name === f);
-          friendCols += `<td class="p-3 text-center font-mono ${r ? 'text-white' : 'text-slate-600'}">${r ? Number(r.score).toFixed(1) : '-'}</td>`;
-        });
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="p-3 font-semibold text-white">${p.player_name}</td>
-          <td class="p-3 text-slate-400 text-xs">${p.position}</td>
-          <td class="p-3 text-emerald-400 font-black text-base">${avg}</td>
-          ${friendCols}
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    async function renderRanking() {
-      const { data: allPlayersData } = await db.from('match_players').select('id, player_name, position');
-      const allP = allPlayersData || [];
-
-      // Agrupa notas de todos os jogos por nome do jogador
-      const grouped = {};
-      allP.forEach(p => {
-        if (!grouped[p.player_name]) {
-          grouped[p.player_name] = { name: p.player_name, pos: p.position, scores: [] };
-        }
-        const pRatings = ratings.filter(r => r.match_player_id === p.id);
-        pRatings.forEach(r => grouped[p.player_name].scores.push(Number(r.score)));
-      });
-
-      const stats = Object.values(grouped).map(item => {
-        const total = item.scores.length;
-        const avg = total > 0 ? (item.scores.reduce((a, b) => a + b, 0) / total) : null;
-        return { name: item.name, pos: item.pos, avg, total };
-      }).filter(item => item.avg !== null);
-
-      stats.sort((a, b) => b.avg - a.avg);
-
-      if (stats.length > 0) {
-        const craque = stats[0];
-        const bagre = stats[stats.length - 1];
-
-        document.getElementById('craqueName').textContent = craque.name;
-        document.getElementById('craqueScore').textContent = `Média: ${craque.avg.toFixed(1)} (${craque.total} voto(s))`;
-
-        document.getElementById('bagreName').textContent = bagre.name;
-        document.getElementById('bagreScore').textContent = `Média: ${bagre.avg.toFixed(1)} (${bagre.total} voto(s))`;
-      }
-
-      const list = document.getElementById('monthlyRankingList');
-      list.innerHTML = '';
-      stats.forEach((p, idx) => {
-        const row = document.createElement('div');
-        row.className = "flex justify-between items-center py-2.5";
-        row.innerHTML = `
-          <div class="flex items-center gap-3">
-            <span class="font-mono text-xs w-5 text-slate-400">#${idx + 1}</span>
-            <span class="font-bold text-white">${p.name}</span>
-            <span class="text-xs text-slate-500">${p.pos} (${p.total} avaliações)</span>
-          </div>
-          <span class="font-mono font-black text-emerald-400">${p.avg.toFixed(1)}</span>
-        `;
-        list.appendChild(row);
-      });
-    }
-
-    function switchTab(tab) {
-      ['rate', 'compare', 'ranking'].forEach(t => {
-        const isSelected = t === tab;
-        document.getElementById(`view${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.toggle('hidden', !isSelected);
-        const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
-        btn.className = isSelected 
-          ? "px-5 py-2.5 font-bold rounded-lg bg-emerald-600 text-white" 
-          : "px-5 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400";
-      });
-    }
-
-    checkSession();
-  </script>
-</body>
-</html>
+      { name: "

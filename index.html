@@ -92,10 +92,24 @@
 
     <!-- Aba 1: Avaliação -->
     <main id="viewRate" class="space-y-4">
-      <div id="playersList" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
-      <button id="btnSave" onclick="saveRatings()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-lg rounded-xl shadow-lg transition">
-        Salvar Minhas Notas
-      </button>
+      <!-- Aviso de Jogo Bloqueado Pré-Horário -->
+      <div id="rateLockWarning" style="display: none;" class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-8 text-center space-y-3">
+        <div class="text-4xl">⏳</div>
+        <h3 class="text-xl font-black text-amber-300">Votação ainda não liberada!</h3>
+        <p id="rateLockMessage" class="text-sm text-slate-300 max-w-md mx-auto">
+          As notas só poderão ser atribuídas a partir do início da partida.
+        </p>
+        <button onclick="switchTab('bolao')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition">
+          Aproveitar para dar seu Palpite no Bolão
+        </button>
+      </div>
+
+      <div id="rateContent" class="space-y-4">
+        <div id="playersList" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        <button id="btnSave" onclick="saveRatings()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-lg rounded-xl shadow-lg transition">
+          Salvar Minhas Notas
+        </button>
+      </div>
     </main>
 
     <!-- Aba 2: Comparativo (Votação Cega) -->
@@ -142,10 +156,14 @@
     <!-- Aba 4: Bolão de Palpites -->
     <main id="viewBolao" style="display: none;" class="space-y-6">
       <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 space-y-4">
-        <h3 class="text-lg font-black text-white flex items-center justify-between">
-          <span>Seu Palpite para esta Partida</span>
-          <span id="bolaoMatchTitle" class="text-xs text-emerald-400 font-normal"></span>
-        </h3>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h3 class="text-lg font-black text-white">Seu Palpite para esta Partida</h3>
+            <span id="bolaoMatchTitle" class="text-xs text-emerald-400 font-semibold block"></span>
+          </div>
+          <span id="bolaoLockBadge" class="text-xs font-bold px-3 py-1 rounded-full w-fit"></span>
+        </div>
+
         <div class="flex items-center justify-center gap-4 py-2">
           <div class="text-center">
             <span class="block font-bold text-sm text-slate-300 mb-1">Palmeiras</span>
@@ -157,9 +175,13 @@
             <input id="inputPredOpponent" type="number" min="0" max="20" class="w-16 h-14 bg-slate-900 border border-slate-700 rounded-xl text-center text-2xl font-black text-white focus:outline-none focus:border-emerald-500">
           </div>
         </div>
+
         <button id="btnSavePrediction" onclick="savePrediction()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-sm rounded-xl transition">
           Confirmar Palpite
         </button>
+        <p id="bolaoLockText" style="display: none;" class="text-xs text-center text-rose-400 font-semibold">
+          🔒 Palpites encerrados para esta partida! A bola já rolou.
+        </p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -205,7 +227,7 @@
     </main>
   </div>
 
-  <!-- MODAL DE NOVO JOGO -->
+  <!-- MODAL DE NOVO JOGO (COM DATA E HORA DE INÍCIO) -->
   <div id="newMatchModal" style="display: none;" class="fixed inset-0 bg-black/80 items-center justify-center p-4 z-50">
     <div class="bg-slate-800 p-6 rounded-2xl border border-emerald-500 max-w-md w-full space-y-4">
       <h3 class="text-xl font-black text-white">Cadastrar Próximo Jogo ⚽</h3>
@@ -219,6 +241,12 @@
           <label class="text-xs text-slate-300 font-semibold block mb-1">Competição / Detalhes:</label>
           <input id="modalCompetition" type="text" placeholder="Ex: Brasileirão, Allianz Parque..." 
                  class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white font-bold focus:border-emerald-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="text-xs text-slate-300 font-semibold block mb-1">Data e Hora de Início do Jogo:</label>
+          <input id="modalMatchTime" type="datetime-local" 
+                 class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white font-bold focus:border-emerald-500 focus:outline-none">
+          <span class="text-[11px] text-slate-400 mt-1 block">A partir deste horário: o bolão trava e as notas são liberadas.</span>
         </div>
       </div>
       <div class="flex gap-2 pt-2">
@@ -263,12 +291,12 @@
     const SUPABASE_KEY = "sb_publishable_kP5nMFx8P0OmrV0gocZqEg_0ZXI56r1";
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Amigos autorizados (incluindo o Benga)
     const FRIENDS = ["Celão", "Danão", "Bona", "Gabão", "Calango", "Benga"];
 
     const INITIAL_MATCH = {
       opponent: "Botafogo",
       match_date: "2026-09-06",
+      match_time: "2026-09-06T16:00:00",
       competition: "Brasileirão Série A"
     };
 
@@ -415,6 +443,7 @@
       document.getElementById('newMatchModal').style.display = 'flex';
       document.getElementById('modalOpponent').value = '';
       document.getElementById('modalCompetition').value = '';
+      document.getElementById('modalMatchTime').value = '';
     }
 
     function closeNewMatchModal() {
@@ -424,16 +453,22 @@
     async function createMatchSubmit() {
       const opp = document.getElementById('modalOpponent').value.trim();
       const comp = document.getElementById('modalCompetition').value.trim();
+      const mTime = document.getElementById('modalMatchTime').value;
+
       if (!opp) return alert('Por favor, informe o adversário.');
+      if (!mTime) return alert('Por favor, defina a data e horário de início do jogo.');
 
       const btn = document.getElementById('btnCreateMatch');
       btn.disabled = true;
       btn.textContent = 'Criando...';
 
+      const matchDate = mTime.split('T')[0];
+
       const { data: newMatch } = await db.from('matches').insert([{
         opponent: opp,
         competition: comp || 'Brasileirão',
-        match_date: new Date().toISOString().split('T')[0]
+        match_date: matchDate,
+        match_time: new Date(mTime).toISOString()
       }]).select().single();
 
       const roster = ELENCO_ATUAL.map(p => ({
@@ -477,6 +512,17 @@
       await initApp();
     }
 
+    // Checagem se o jogo já começou
+    function isMatchStarted(match) {
+      if (!match) return false;
+      if (match.match_time) {
+        return new Date() >= new Date(match.match_time);
+      }
+      // Se não tiver horário exato cadastrado, assume liberado para partidas de datas anteriores
+      const mDate = new Date(match.match_date + 'T23:59:59');
+      return new Date() >= mDate;
+    }
+
     async function loadData() {
       try {
         const { data: pData } = await db.from('match_players').select('*').eq('match_id', currentMatchId);
@@ -490,7 +536,8 @@
 
         const curMatch = allMatches.find(m => m.id === currentMatchId);
         if (curMatch) {
-          document.getElementById('bolaoMatchTitle').textContent = `Palmeiras vs ${curMatch.opponent}`;
+          const formattedTime = curMatch.match_time ? new Date(curMatch.match_time).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : curMatch.match_date;
+          document.getElementById('bolaoMatchTitle').textContent = `Palmeiras vs ${curMatch.opponent} • Início: ${formattedTime}`;
           document.getElementById('bolaoOpponentName').textContent = curMatch.opponent;
         }
 
@@ -525,6 +572,24 @@
     }
 
     function renderRateList() {
+      const curMatch = allMatches.find(m => m.id === currentMatchId);
+      const hasStarted = isMatchStarted(curMatch);
+
+      const rateLockWarning = document.getElementById('rateLockWarning');
+      const rateContent = document.getElementById('rateContent');
+
+      // Trava de avaliação pré-jogo
+      if (!hasStarted) {
+        rateLockWarning.style.display = 'block';
+        rateContent.style.display = 'none';
+        const horaTexto = curMatch && curMatch.match_time ? new Date(curMatch.match_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'o horário marcado';
+        document.getElementById('rateLockMessage').textContent = `A bola ainda não rolou! As notas só estarão liberadas a partir das ${horaTexto}.`;
+        return;
+      }
+
+      rateLockWarning.style.display = 'none';
+      rateContent.style.display = 'block';
+
       const list = document.getElementById('playersList');
       list.innerHTML = '';
 
@@ -562,6 +627,11 @@
     }
 
     async function saveRatings() {
+      const curMatch = allMatches.find(m => m.id === currentMatchId);
+      if (!isMatchStarted(curMatch)) {
+        return alert('A partida ainda não começou. As notas só podem ser enviadas após o início do jogo.');
+      }
+
       const btn = document.getElementById('btnSave');
       btn.disabled = true;
       btn.textContent = 'Gravando notas...';
@@ -589,7 +659,6 @@
     }
 
     function renderCompareTable() {
-      // Votação Cega: só exibe se já salvou notas nesta partida
       const userHasVoted = players.some(p => {
         return ratings.some(r => r.match_player_id === p.id && r.friend_name === currentUser);
       });
@@ -686,7 +755,13 @@
       });
     }
 
+    // Salvar palpite com verificação de bloqueio
     async function savePrediction() {
+      const curMatch = allMatches.find(m => m.id === currentMatchId);
+      if (isMatchStarted(curMatch)) {
+        return alert('🔒 O bolão foi encerrado para esta partida porque a bola já rolou!');
+      }
+
       const palmeirasGoals = document.getElementById('inputPredPalmeiras').value;
       const opponentGoals = document.getElementById('inputPredOpponent').value;
 
@@ -706,16 +781,47 @@
     }
 
     function renderBolao() {
-      const myPred = predictions.find(p => p.match_id === currentMatchId && p.friend_name === currentUser);
-      if (myPred) {
-        document.getElementById('inputPredPalmeiras').value = myPred.palmeiras_goals;
-        document.getElementById('inputPredOpponent').value = myPred.opponent_goals;
+      const curMatch = allMatches.find(m => m.id === currentMatchId);
+      const isLocked = isMatchStarted(curMatch);
+
+      const inPalmeiras = document.getElementById('inputPredPalmeiras');
+      const inOpponent = document.getElementById('inputPredOpponent');
+      const btnSave = document.getElementById('btnSavePrediction');
+      const lockText = document.getElementById('bolaoLockText');
+      const lockBadge = document.getElementById('bolaoLockBadge');
+
+      // Aplica trava se o jogo já começou
+      if (isLocked) {
+        inPalmeiras.disabled = true;
+        inOpponent.disabled = true;
+        inPalmeiras.classList.add('opacity-40', 'cursor-not-allowed');
+        inOpponent.classList.add('opacity-40', 'cursor-not-allowed');
+        btnSave.style.display = 'none';
+        lockText.style.display = 'block';
+
+        lockBadge.textContent = '🔒 Palpites Encerrados';
+        lockBadge.className = 'text-xs font-bold px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30';
       } else {
-        document.getElementById('inputPredPalmeiras').value = '';
-        document.getElementById('inputPredOpponent').value = '';
+        inPalmeiras.disabled = false;
+        inOpponent.disabled = false;
+        inPalmeiras.classList.remove('opacity-40', 'cursor-not-allowed');
+        inOpponent.classList.remove('opacity-40', 'cursor-not-allowed');
+        btnSave.style.display = 'block';
+        lockText.style.display = 'none';
+
+        lockBadge.textContent = '🔓 Palpites Abertos';
+        lockBadge.className = 'text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
       }
 
-      const curMatch = allMatches.find(m => m.id === currentMatchId);
+      const myPred = predictions.find(p => p.match_id === currentMatchId && p.friend_name === currentUser);
+      if (myPred) {
+        inPalmeiras.value = myPred.palmeiras_goals;
+        inOpponent.value = myPred.opponent_goals;
+      } else {
+        inPalmeiras.value = '';
+        inOpponent.value = '';
+      }
+
       const matchPreds = predictions.filter(p => p.match_id === currentMatchId);
       const listDiv = document.getElementById('matchPredictionsList');
       listDiv.innerHTML = '';
@@ -743,7 +849,6 @@
         });
       }
 
-      // Ranking Acumulado com os 6 amigos
       const scoresByFriend = { "Celão": 0, "Danão": 0, "Bona": 0, "Gabão": 0, "Calango": 0, "Benga": 0 };
       allMatches.forEach(m => {
         if (m.home_score !== null && m.away_score !== null) {

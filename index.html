@@ -92,13 +92,19 @@
 
     <!-- Aba 1: Avaliação -->
     <main id="viewRate" class="space-y-4">
-      <div id="rateLockWarning" style="display: none;" class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-8 text-center space-y-3">
-        <div class="text-4xl">⏳</div>
-        <h3 class="text-xl font-black text-amber-300">Votação ainda não liberada!</h3>
+      <!-- Banner de Status (Bloqueio Pré-Jogo ou Expirado) -->
+      <div id="rateLockWarning" style="display: none;" class="border rounded-2xl p-8 text-center space-y-3">
+        <div id="rateLockIcon" class="text-4xl">⏳</div>
+        <h3 id="rateLockTitle" class="text-xl font-black"></h3>
         <p id="rateLockMessage" class="text-sm text-slate-300 max-w-md mx-auto"></p>
-        <button onclick="switchTab('bolao')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition">
-          Aproveitar para dar seu Palpite no Bolão
+        <button id="rateLockBtn" onclick="switchTab('bolao')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition">
+          Ver Bolão
         </button>
+      </div>
+
+      <!-- Banner Informativo quando o usuário já salvou suas notas pós-prazo -->
+      <div id="rateReadOnlyInfo" style="display: none;" class="bg-emerald-950/40 border border-emerald-500/40 rounded-xl p-3 text-center text-xs text-emerald-300 font-semibold">
+        🔒 Janela de avaliação encerrada (24h passadas). Exibindo apenas os atletas que você confirmou em campo.
       </div>
 
       <div id="rateContent" class="space-y-4">
@@ -243,7 +249,7 @@
           <label class="text-xs text-slate-300 font-semibold block mb-1">Data e Hora de Início do Jogo:</label>
           <input id="modalMatchTime" type="datetime-local" 
                  class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white font-bold focus:border-emerald-500 focus:outline-none">
-          <span class="text-[11px] text-slate-400 mt-1 block">A partir deste horário: o bolão trava e as notas são liberadas.</span>
+          <span class="text-[11px] text-slate-400 mt-1 block">A partir deste horário: bolão trava e notas liberam por 24h.</span>
         </div>
       </div>
       <div class="flex gap-2 pt-2">
@@ -509,13 +515,25 @@
       await initApp();
     }
 
+    // Regras de Tempo da Partida
+    function getMatchTime(match) {
+      if (!match) return null;
+      if (match.match_time) return new Date(match.match_time);
+      if (match.match_date) return new Date(match.match_date + 'T23:59:59');
+      return null;
+    }
+
     function isMatchStarted(match) {
-      if (!match) return false;
-      if (match.match_time) {
-        return new Date() >= new Date(match.match_time);
-      }
-      const mDate = new Date(match.match_date + 'T23:59:59');
-      return new Date() >= mDate;
+      const t = getMatchTime(match);
+      if (!t) return false;
+      return new Date() >= t;
+    }
+
+    function isMatchExpired(match) {
+      const t = getMatchTime(match);
+      if (!t) return false;
+      const expireTime = new Date(t.getTime() + (24 * 60 * 60 * 1000)); // 24 horas após o início
+      return new Date() > expireTime;
     }
 
     async function loadData() {
@@ -571,12 +589,36 @@
     function renderRateList() {
       const curMatch = allMatches.find(m => m.id === currentMatchId);
       const hasStarted = isMatchStarted(curMatch);
+      const isExpired = isMatchExpired(curMatch);
+
+      // Checa se o usuário atual já salvou notas nesta partida
+      const userRatings = ratings.filter(r => r.friend_name === currentUser && players.some(p => p.id === r.match_player_id));
+      const hasVoted = userRatings.length > 0;
 
       const rateLockWarning = document.getElementById('rateLockWarning');
+      const rateLockIcon = document.getElementById('rateLockIcon');
+      const rateLockTitle = document.getElementById('rateLockTitle');
+      const rateLockMessage = document.getElementById('rateLockMessage');
+      const rateLockBtn = document.getElementById('rateLockBtn');
+      const rateReadOnlyInfo = document.getElementById('rateReadOnlyInfo');
       const rateContent = document.getElementById('rateContent');
+      const btnSave = document.getElementById('btnSave');
 
+      rateLockWarning.style.display = 'none';
+      rateReadOnlyInfo.style.display = 'none';
+      rateContent.style.display = 'block';
+      btnSave.style.display = 'block';
+
+      // 1. Cenário: Jogo ainda não começou
       if (!hasStarted) {
         rateLockWarning.style.display = 'block';
+        rateLockWarning.className = 'bg-amber-500/10 border border-amber-500/30 rounded-2xl p-8 text-center space-y-3';
+        rateLockIcon.textContent = '⏳';
+        rateLockTitle.textContent = 'Votação ainda não liberada!';
+        rateLockTitle.className = 'text-xl font-black text-amber-300';
+        rateLockBtn.style.display = 'inline-block';
+        rateLockBtn.textContent = 'Aproveitar para dar palpite no Bolão';
+        rateLockBtn.onclick = () => switchTab('bolao');
         rateContent.style.display = 'none';
 
         if (curMatch && curMatch.match_time) {
@@ -584,22 +626,55 @@
           const weekday = d.toLocaleDateString('pt-BR', { weekday: 'long' });
           const dateStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
           const timeStr = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-          document.getElementById('rateLockMessage').textContent = 
-            `A bola ainda não rolou! As notas só estarão liberadas na ${weekday} (${dateStr}) a partir das ${timeStr}.`;
+          rateLockMessage.textContent = `A bola ainda não rolou! As notas só estarão liberadas na ${weekday} (${dateStr}) a partir das ${timeStr}.`;
         } else {
-          document.getElementById('rateLockMessage').textContent = 
-            `A bola ainda não rolou! As notas só estarão liberadas após o horário do jogo.`;
+          rateLockMessage.textContent = `A bola ainda não rolou! As notas só estarão liberadas a partir do apito inicial.`;
         }
         return;
       }
 
-      rateLockWarning.style.display = 'none';
-      rateContent.style.display = 'block';
+      // 2. Cenário: Passaram mais de 24h e o usuário NÃO votou
+      if (isExpired && !hasVoted) {
+        rateLockWarning.style.display = 'block';
+        rateLockWarning.className = 'bg-rose-500/10 border border-rose-500/30 rounded-2xl p-8 text-center space-y-3';
+        rateLockIcon.textContent = '🔒';
+        rateLockTitle.textContent = 'Prazo de Avaliação Encerrado!';
+        rateLockTitle.className = 'text-xl font-black text-rose-400';
+        rateLockMessage.textContent = 'O prazo de 24 horas após o início da partida expirou e você não registrou suas notas a tempo. Não é mais possível avaliar.';
+        rateLockBtn.style.display = 'inline-block';
+        rateLockBtn.textContent = 'Ver Notas da Rodada';
+        rateLockBtn.onclick = () => switchTab('compare');
+        rateContent.style.display = 'none';
+        return;
+      }
+
+      // 3. Cenário: Passaram mais de 24h e o usuário JÁ TINHA VOTADO
+      // Mostra apenas quem jogou e trava edição
+      const isReadOnly = isExpired && hasVoted;
+
+      if (isReadOnly) {
+        rateReadOnlyInfo.style.display = 'block';
+        btnSave.style.display = 'none'; // Some o botão de salvar
+      }
 
       const list = document.getElementById('playersList');
       list.innerHTML = '';
 
-      players.forEach(p => {
+      // Filtra jogadores a serem exibidos:
+      // Se for leitura após 24h, filtra estritamente quem foi salvo com nota válida (jogou)
+      const displayPlayers = isReadOnly 
+        ? players.filter(p => {
+            const r = userRatings.find(item => item.match_player_id === p.id);
+            return r && Number(r.score) >= 0;
+          })
+        : players;
+
+      if (displayPlayers.length === 0 && isReadOnly) {
+        list.innerHTML = `<div class="col-span-2 text-center text-slate-400 py-8">Nenhum jogador atuou ou foi avaliado por você nesta partida.</div>`;
+        return;
+      }
+
+      displayPlayers.forEach(p => {
         const existing = ratings.find(r => r.match_player_id === p.id && r.friend_name === currentUser);
         const hasScore = existing && existing.score !== null && existing.score !== -1;
         const currentScore = hasScore ? existing.score : '6.0';
@@ -607,35 +682,58 @@
 
         const card = document.createElement('div');
         card.className = "bg-slate-800/80 p-4 rounded-xl border border-slate-700 flex flex-col justify-between gap-3";
-        card.innerHTML = `
-          <div class="flex items-center justify-between">
-            <div>
-              <span class="font-bold text-base text-white">${p.player_name}</span>
-              <span class="text-xs font-semibold px-2 py-0.5 ml-2 bg-slate-700 text-slate-300 rounded">${p.position}</span>
+
+        // Modo apenas leitura pós 24h
+        if (isReadOnly) {
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="font-bold text-base text-white">${p.player_name}</span>
+                <span class="text-xs font-semibold px-2 py-0.5 ml-2 bg-slate-700 text-slate-300 rounded">${p.position}</span>
+              </div>
+              <span class="text-xs font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">Jogou</span>
             </div>
-            <label class="flex items-center gap-1.5 cursor-pointer select-none text-xs text-slate-300 bg-slate-900/60 px-2 py-1 rounded border border-slate-700">
-              <input type="checkbox" id="chk-${p.id}" ${isPlayed ? 'checked' : ''} onchange="togglePlayedStatus('${p.id}')" class="accent-emerald-500">
-              <span>Jogou</span>
-            </label>
-          </div>
-          <div class="flex items-center justify-between gap-3 pt-2 border-t border-slate-700/50">
-            <input type="range" min="0" max="10" step="0.5" value="${currentScore}" id="range-${p.id}" 
-                   class="w-full accent-emerald-500 cursor-pointer ${isPlayed ? '' : 'opacity-30 cursor-not-allowed'}" 
-                   ${isPlayed ? '' : 'disabled'}
-                   oninput="document.getElementById('val-${p.id}').textContent = Number(this.value).toFixed(1)">
-            <span id="val-${p.id}" class="text-lg font-black min-w-[2.5rem] text-right ${isPlayed ? 'text-emerald-400' : 'text-slate-500'}">
-              ${isPlayed ? Number(currentScore).toFixed(1) : 'S/N'}
-            </span>
-          </div>
-        `;
+            <div class="flex items-center justify-between pt-2 border-t border-slate-700/50">
+              <span class="text-xs text-slate-400">Sua Nota Registrada:</span>
+              <span class="text-2xl font-black text-emerald-400">${Number(currentScore).toFixed(1)}</span>
+            </div>
+          `;
+        } else {
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="font-bold text-base text-white">${p.player_name}</span>
+                <span class="text-xs font-semibold px-2 py-0.5 ml-2 bg-slate-700 text-slate-300 rounded">${p.position}</span>
+              </div>
+              <label class="flex items-center gap-1.5 cursor-pointer select-none text-xs text-slate-300 bg-slate-900/60 px-2 py-1 rounded border border-slate-700">
+                <input type="checkbox" id="chk-${p.id}" ${isPlayed ? 'checked' : ''} onchange="togglePlayedStatus('${p.id}')" class="accent-emerald-500">
+                <span>Jogou</span>
+              </label>
+            </div>
+            <div class="flex items-center justify-between gap-3 pt-2 border-t border-slate-700/50">
+              <input type="range" min="0" max="10" step="0.5" value="${currentScore}" id="range-${p.id}" 
+                     class="w-full accent-emerald-500 cursor-pointer ${isPlayed ? '' : 'opacity-30 cursor-not-allowed'}" 
+                     ${isPlayed ? '' : 'disabled'}
+                     oninput="document.getElementById('val-${p.id}').textContent = Number(this.value).toFixed(1)">
+              <span id="val-${p.id}" class="text-lg font-black min-w-[2.5rem] text-right ${isPlayed ? 'text-emerald-400' : 'text-slate-500'}">
+                ${isPlayed ? Number(currentScore).toFixed(1) : 'S/N'}
+              </span>
+            </div>
+          `;
+        }
         list.appendChild(card);
       });
     }
 
     async function saveRatings() {
       const curMatch = allMatches.find(m => m.id === currentMatchId);
+
       if (!isMatchStarted(curMatch)) {
         return alert('A partida ainda não começou. As notas só podem ser enviadas após o início do jogo.');
+      }
+
+      if (isMatchExpired(curMatch)) {
+        return alert('O prazo de 24 horas expirou. As notas desta partida estão encerradas.');
       }
 
       const btn = document.getElementById('btnSave');
@@ -665,6 +763,9 @@
     }
 
     function renderCompareTable() {
+      const curMatch = allMatches.find(m => m.id === currentMatchId);
+      const isExpired = isMatchExpired(curMatch);
+
       const userHasVoted = players.some(p => {
         return ratings.some(r => r.match_player_id === p.id && r.friend_name === currentUser);
       });
@@ -672,7 +773,9 @@
       const warning = document.getElementById('blindVoteWarning');
       const content = document.getElementById('compareContent');
 
-      if (!userHasVoted) {
+      // Votação cega ativa durante as 24h caso não tenha votado
+      // Se passar de 24h, libera para consulta de quem perdeu o prazo
+      if (!userHasVoted && !isExpired) {
         warning.style.display = 'block';
         content.style.display = 'none';
         return;

@@ -20,9 +20,9 @@
         <p class="text-slate-400 text-sm mt-1">Digite seu nome para acessar</p>
       </div>
       <div class="space-y-3">
-        <input id="loginInput" type="text" placeholder="Ex: Celão, Benga, Danão..." 
+        <input id="loginInput" type="text" placeholder="Ex: Celão, Lele, Benga..." 
                class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl px-4 py-3 text-center text-lg font-bold text-white focus:outline-none focus:ring-2 focus:ring-emerald-400">
-        <p id="loginError" style="display: none;" class="text-rose-400 text-xs font-semibold">Nome não autorizado. Use: Celão, Danão, Bona, Gabão, Calango ou Benga.</p>
+        <p id="loginError" style="display: none;" class="text-rose-400 text-xs font-semibold">Nome não autorizado. Use: Celão, Danão, Bona, Gabão, Calango, Benga ou Lele.</p>
         <button id="btnLogin" onclick="handleLogin()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-base rounded-xl shadow-lg transition">
           Entrar
         </button>
@@ -92,7 +92,6 @@
 
     <!-- Aba 1: Avaliação -->
     <main id="viewRate" class="space-y-4">
-      <!-- Banner de Status (Bloqueio Pré-Jogo ou Expirado) -->
       <div id="rateLockWarning" style="display: none;" class="border rounded-2xl p-8 text-center space-y-3">
         <div id="rateLockIcon" class="text-4xl">⏳</div>
         <h3 id="rateLockTitle" class="text-xl font-black"></h3>
@@ -102,7 +101,6 @@
         </button>
       </div>
 
-      <!-- Banner Informativo quando o usuário já salvou suas notas pós-prazo -->
       <div id="rateReadOnlyInfo" style="display: none;" class="bg-emerald-950/40 border border-emerald-500/40 rounded-xl p-3 text-center text-xs text-emerald-300 font-semibold">
         🔒 Janela de avaliação encerrada (24h passadas). Exibindo apenas os atletas que você confirmou em campo.
       </div>
@@ -141,6 +139,7 @@
               <th class="p-3 text-center">Gabão</th>
               <th class="p-3 text-center">Calango</th>
               <th class="p-3 text-center">Benga</th>
+              <th class="p-3 text-center">Lele</th>
             </tr>
           </thead>
           <tbody id="compareTableBody" class="divide-y divide-slate-700 text-sm"></tbody>
@@ -294,7 +293,8 @@
     const SUPABASE_KEY = "sb_publishable_kP5nMFx8P0OmrV0gocZqEg_0ZXI56r1";
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const FRIENDS = ["Celão", "Danão", "Bona", "Gabão", "Calango", "Benga"];
+    // Lista atualizada com os 7 amigos
+    const FRIENDS = ["Celão", "Danão", "Bona", "Gabão", "Calango", "Benga", "Lele"];
 
     const INITIAL_MATCH = {
       opponent: "Botafogo",
@@ -515,7 +515,6 @@
       await initApp();
     }
 
-    // Regras de Tempo da Partida
     function getMatchTime(match) {
       if (!match) return null;
       if (match.match_time) return new Date(match.match_time);
@@ -532,7 +531,7 @@
     function isMatchExpired(match) {
       const t = getMatchTime(match);
       if (!t) return false;
-      const expireTime = new Date(t.getTime() + (24 * 60 * 60 * 1000)); // 24 horas após o início
+      const expireTime = new Date(t.getTime() + (24 * 60 * 60 * 1000));
       return new Date() > expireTime;
     }
 
@@ -591,7 +590,6 @@
       const hasStarted = isMatchStarted(curMatch);
       const isExpired = isMatchExpired(curMatch);
 
-      // Checa se o usuário atual já salvou notas nesta partida
       const userRatings = ratings.filter(r => r.friend_name === currentUser && players.some(p => p.id === r.match_player_id));
       const hasVoted = userRatings.length > 0;
 
@@ -609,7 +607,6 @@
       rateContent.style.display = 'block';
       btnSave.style.display = 'block';
 
-      // 1. Cenário: Jogo ainda não começou
       if (!hasStarted) {
         rateLockWarning.style.display = 'block';
         rateLockWarning.className = 'bg-amber-500/10 border border-amber-500/30 rounded-2xl p-8 text-center space-y-3';
@@ -633,7 +630,6 @@
         return;
       }
 
-      // 2. Cenário: Passaram mais de 24h e o usuário NÃO votou
       if (isExpired && !hasVoted) {
         rateLockWarning.style.display = 'block';
         rateLockWarning.className = 'bg-rose-500/10 border border-rose-500/30 rounded-2xl p-8 text-center space-y-3';
@@ -648,20 +644,16 @@
         return;
       }
 
-      // 3. Cenário: Passaram mais de 24h e o usuário JÁ TINHA VOTADO
-      // Mostra apenas quem jogou e trava edição
       const isReadOnly = isExpired && hasVoted;
 
       if (isReadOnly) {
         rateReadOnlyInfo.style.display = 'block';
-        btnSave.style.display = 'none'; // Some o botão de salvar
+        btnSave.style.display = 'none';
       }
 
       const list = document.getElementById('playersList');
       list.innerHTML = '';
 
-      // Filtra jogadores a serem exibidos:
-      // Se for leitura após 24h, filtra estritamente quem foi salvo com nota válida (jogou)
       const displayPlayers = isReadOnly 
         ? players.filter(p => {
             const r = userRatings.find(item => item.match_player_id === p.id);
@@ -683,7 +675,6 @@
         const card = document.createElement('div');
         card.className = "bg-slate-800/80 p-4 rounded-xl border border-slate-700 flex flex-col justify-between gap-3";
 
-        // Modo apenas leitura pós 24h
         if (isReadOnly) {
           card.innerHTML = `
             <div class="flex items-center justify-between">
@@ -773,8 +764,6 @@
       const warning = document.getElementById('blindVoteWarning');
       const content = document.getElementById('compareContent');
 
-      // Votação cega ativa durante as 24h caso não tenha votado
-      // Se passar de 24h, libera para consulta de quem perdeu o prazo
       if (!userHasVoted && !isExpired) {
         warning.style.display = 'block';
         content.style.display = 'none';
@@ -956,7 +945,8 @@
         });
       }
 
-      const scoresByFriend = { "Celão": 0, "Danão": 0, "Bona": 0, "Gabão": 0, "Calango": 0, "Benga": 0 };
+      // Ranking do Bolão acumulando os 7 amigos
+      const scoresByFriend = { "Celão": 0, "Danão": 0, "Bona": 0, "Gabão": 0, "Calango": 0, "Benga": 0, "Lele": 0 };
       allMatches.forEach(m => {
         if (m.home_score !== null && m.away_score !== null) {
           const mPreds = predictions.filter(p => p.match_id === m.id);

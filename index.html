@@ -193,7 +193,7 @@
         </div>
 
         <div class="bg-slate-800 rounded-xl border border-slate-700 p-4 space-y-3">
-          <h4 class="font-bold text-slate-200 text-sm">Classificação do Bolão (Geral)</h4>
+          <h4 class="font-bold text-slate-200 text-sm">Top 5 - Classificação do Bolão</h4>
           <p class="text-xs text-slate-400">Placar exato: 2 pts • Acerto de vencedor/empate: 1 pt</p>
           <div id="bolaoRankingList" class="divide-y divide-slate-700 text-sm"></div>
         </div>
@@ -959,9 +959,10 @@
       });
 
       const rankingArray = Object.entries(scoresByFriend).map(([name, pts]) => ({ name, pts })).sort((a, b) => b.pts - a.pts);
+      const top5Ranking = rankingArray.slice(0, 5);
       const bolaoListDiv = document.getElementById('bolaoRankingList');
       bolaoListDiv.innerHTML = '';
-      rankingArray.forEach((item, idx) => {
+      top5Ranking.forEach((item, idx) => {
         const row = document.createElement('div');
         row.className = "flex justify-between items-center py-2.5";
         row.innerHTML = `

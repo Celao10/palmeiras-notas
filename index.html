@@ -6,176 +6,199 @@
   <title>Notas do Verdão</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    /* Scrollbar personalizada sutil */
+    ::-webkit-scrollbar { height: 8px; width: 6px; }
+    ::-webkit-scrollbar-track { background: #061811; }
+    ::-webkit-scrollbar-thumb { background: #15803d; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #16a34a; }
+  </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
+<body class="bg-[#08120d] text-slate-100 min-h-screen p-3 md:p-6 selection:bg-emerald-500 selection:text-white">
 
   <!-- TELA DE LOGIN -->
-  <div id="loginScreen" style="display: flex;" class="min-h-[80vh] items-center justify-center">
-    <div class="bg-slate-800 p-8 rounded-2xl border border-emerald-500/40 shadow-2xl max-w-md w-full text-center space-y-6">
-      <div class="w-16 h-16 bg-emerald-700/40 border border-emerald-500 rounded-full flex items-center justify-center mx-auto text-3xl">
+  <div id="loginScreen" style="display: flex;" class="min-h-[85vh] items-center justify-center">
+    <div class="bg-gradient-to-b from-[#0e2419] to-[#0a1811] p-8 md:p-10 rounded-3xl border border-emerald-500/30 shadow-[0_20px_50px_rgba(0,0,0,0.8)] max-w-sm w-full text-center space-y-6 relative overflow-hidden backdrop-blur-xl">
+      <div class="absolute -top-20 -left-20 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-20 -right-20 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="w-20 h-20 bg-gradient-to-tr from-emerald-800 to-emerald-600 border-2 border-emerald-400/40 rounded-3xl flex items-center justify-center mx-auto text-4xl shadow-lg shadow-emerald-950/80">
         🐷
       </div>
       <div>
-        <h2 class="text-2xl font-black text-white">NOTAS DO VERDÃO</h2>
-        <p class="text-slate-400 text-sm mt-1">Digite seu nome para acessar</p>
+        <h2 class="text-2xl font-black tracking-tight text-white uppercase">Notas do Verdão</h2>
+        <p class="text-emerald-400/80 text-xs font-semibold tracking-wider uppercase mt-1">Painel da Torcida</p>
       </div>
-      <div class="space-y-3">
-        <input id="loginInput" type="text" placeholder="Ex: Celão, Gabo, Lele..." 
-               class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl px-4 py-3 text-center text-lg font-bold text-white focus:outline-none focus:ring-2 focus:ring-emerald-400">
+      <div class="space-y-4">
+        <input id="loginInput" type="text" placeholder="Seu nome ou apelido..." 
+               class="w-full bg-[#050e09] border border-emerald-900/80 focus:border-emerald-400 rounded-2xl px-4 py-3.5 text-center text-lg font-bold text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition">
         <p id="loginError" style="display: none;" class="text-rose-400 text-xs font-semibold"></p>
-        <button id="btnLogin" onclick="handleLogin()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-base rounded-xl shadow-lg transition">
-          Entrar
+        <button id="btnLogin" onclick="handleLogin()" class="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 font-extrabold text-sm uppercase tracking-wider text-white rounded-2xl shadow-lg shadow-emerald-900/50 hover:shadow-emerald-700/50 transition duration-200">
+          Entrar na Resenha
         </button>
       </div>
     </div>
   </div>
 
   <!-- APLICAÇÃO PRINCIPAL -->
-  <div id="appScreen" style="display: none;" class="max-w-4xl mx-auto space-y-6">
-    <header class="bg-emerald-800 p-6 rounded-2xl shadow-lg border border-emerald-600 flex flex-col md:flex-row justify-between items-center gap-4">
-      <div>
-        <h1 class="text-3xl font-black tracking-wide text-white">NOTAS DO VERDÃO 🐷</h1>
-        <div class="flex flex-wrap items-center gap-2 mt-2">
-          <select id="matchSelect" onchange="onSelectMatch()" class="bg-emerald-950/80 text-white font-semibold text-sm border border-emerald-500/60 rounded-lg px-3 py-1.5 focus:outline-none">
-          </select>
-          
-          <div id="adminActionGroup" style="display: none;" class="flex-wrap items-center gap-2">
-            <button onclick="openNewMatchModal()" class="bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black text-xs px-3 py-1.5 rounded-lg shadow transition">
-              + Novo Jogo
-            </button>
-            <button onclick="openScoreModal()" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-3 py-1.5 rounded-lg shadow transition">
-              Definir Placar Final
-            </button>
-            <button onclick="openManageUsersModal()" class="bg-sky-400 hover:bg-sky-300 text-slate-950 font-black text-xs px-3 py-1.5 rounded-lg shadow transition">
-              👥 Gerenciar Amigos
-            </button>
+  <div id="appScreen" style="display: none;" class="max-w-4xl mx-auto space-y-5">
+    
+    <!-- HEADER -->
+    <header class="bg-gradient-to-r from-[#0b2417] via-[#091f14] to-[#07170f] p-5 md:p-6 rounded-3xl shadow-xl border border-emerald-500/20 flex flex-col md:flex-row justify-between items-center gap-4 relative overflow-hidden">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-950/90 border border-emerald-500/40 flex items-center justify-center text-2xl shadow-inner shrink-0">
+          🐷
+        </div>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-black tracking-tight text-white uppercase flex items-center gap-2">
+            Notas do Verdão
+          </h1>
+          <div class="flex flex-wrap items-center gap-2 mt-1.5">
+            <select id="matchSelect" onchange="onSelectMatch()" class="bg-[#05110a] text-emerald-100 font-bold text-xs border border-emerald-800/80 rounded-xl px-3 py-1.5 focus:outline-none focus:border-emerald-400 cursor-pointer">
+            </select>
+            
+            <div id="adminActionGroup" style="display: none;" class="flex-wrap items-center gap-1.5">
+              <button onclick="openNewMatchModal()" class="bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black text-[11px] uppercase tracking-wider px-2.5 py-1.5 rounded-lg transition shadow-sm">
+                + Jogo
+              </button>
+              <button onclick="openScoreModal()" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[11px] uppercase tracking-wider px-2.5 py-1.5 rounded-lg transition shadow-sm">
+                Placar
+              </button>
+              <button onclick="openManageUsersModal()" class="bg-sky-400 hover:bg-sky-300 text-slate-950 font-black text-[11px] uppercase tracking-wider px-2.5 py-1.5 rounded-lg transition shadow-sm">
+                Amigos
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="flex flex-col items-end gap-2">
-        <div class="flex items-center gap-3 bg-emerald-950/70 px-4 py-2 rounded-xl border border-emerald-500/40">
+      <div class="flex flex-col md:items-end items-center gap-2 w-full md:w-auto">
+        <div class="flex items-center gap-3 bg-[#05110a]/90 px-3.5 py-1.5 rounded-2xl border border-emerald-900/60 shadow-inner">
           <div class="text-right">
-            <span class="text-xs text-emerald-300 block">Logado como:</span>
-            <span id="loggedUserDisplay" class="font-extrabold text-white text-base"></span>
+            <span class="text-[10px] uppercase font-bold text-emerald-500 tracking-wider block">Torcedor</span>
+            <span id="loggedUserDisplay" class="font-extrabold text-white text-sm"></span>
           </div>
-          <button onclick="logout()" class="text-xs bg-red-500/20 hover:bg-red-500/40 text-red-300 px-2 py-1 rounded border border-red-500/30">
+          <button onclick="logout()" class="text-xs bg-rose-500/10 hover:bg-rose-500/30 text-rose-300 px-2 py-1 rounded-lg border border-rose-500/20 font-semibold transition">
             Sair
           </button>
         </div>
 
-        <div id="adminToggleContainer" style="display: none;" class="items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 text-xs">
-          <span class="text-slate-300 font-semibold">Modo Admin</span>
+        <div id="adminToggleContainer" style="display: none;" class="items-center gap-2 bg-[#05110a]/80 px-3 py-1 rounded-xl border border-emerald-900/40 text-[11px]">
+          <span class="text-slate-400 font-bold uppercase tracking-wider">Modo Admin</span>
           <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" id="adminSwitch" onchange="toggleAdminMode()" class="sr-only peer">
-            <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+            <div class="w-8 h-4 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-500"></div>
           </label>
         </div>
       </div>
     </header>
 
-    <!-- Navegação de Abas -->
-    <div class="flex flex-wrap gap-2 border-b border-slate-700 pb-2">
-      <button id="tabRate" onclick="switchTab('rate')" class="px-4 py-2.5 font-bold rounded-lg bg-emerald-600 text-white text-sm">
+    <!-- NAVEGAÇÃO DE ABAS (Pills Flutuantes) -->
+    <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+      <button id="tabRate" onclick="switchTab('rate')" class="px-4 py-2.5 font-extrabold rounded-2xl bg-emerald-500 text-slate-950 text-xs uppercase tracking-wider shrink-0 transition shadow-md shadow-emerald-950">
         Avaliar Partida
       </button>
-      <button id="tabCompare" onclick="switchTab('compare')" class="px-4 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400 text-sm">
+      <button id="tabCompare" onclick="switchTab('compare')" class="px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 transition border border-emerald-900/30">
         Notas da Rodada
       </button>
-      <button id="tabTrend" onclick="switchTab('trend')" class="px-4 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400 text-sm">
+      <button id="tabTrend" onclick="switchTab('trend')" class="px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 transition border border-emerald-900/30">
         📈 Oscilômetro
       </button>
-      <button id="tabBolao" onclick="switchTab('bolao')" class="px-4 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400 text-sm">
+      <button id="tabBolao" onclick="switchTab('bolao')" class="px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 transition border border-emerald-900/30">
         ⚽ Bolão de Palpites
       </button>
-      <button id="tabRanking" onclick="switchTab('ranking')" class="px-4 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400 text-sm">
+      <button id="tabRanking" onclick="switchTab('ranking')" class="px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 transition border border-emerald-900/30">
         🏆 Craques & Bagres
       </button>
     </div>
 
     <!-- Aba 1: Avaliação -->
     <main id="viewRate" class="space-y-4">
-      <div id="rateLockWarning" style="display: none;" class="border rounded-2xl p-8 text-center space-y-3">
+      <div id="rateLockWarning" style="display: none;" class="border rounded-3xl p-8 text-center space-y-3 bg-[#0a1811]">
         <div id="rateLockIcon" class="text-4xl">⏳</div>
         <h3 id="rateLockTitle" class="text-xl font-black"></h3>
         <p id="rateLockMessage" class="text-sm text-slate-300 max-w-md mx-auto"></p>
-        <button id="rateLockBtn" onclick="switchTab('bolao')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition">
+        <button id="rateLockBtn" onclick="switchTab('bolao')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider transition">
           Ver Bolão
         </button>
       </div>
 
-      <div id="rateReadOnlyInfo" style="display: none;" class="bg-emerald-950/40 border border-emerald-500/40 rounded-xl p-3 text-center text-xs text-emerald-300 font-semibold">
+      <div id="rateReadOnlyInfo" style="display: none;" class="bg-emerald-950/40 border border-emerald-500/30 rounded-2xl p-3 text-center text-xs text-emerald-300 font-semibold">
         🔒 Janela de avaliação encerrada (24h passadas). Exibindo apenas os atletas que você confirmou em campo.
       </div>
 
       <div id="rateContent" class="space-y-4">
         <div id="playersList" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
-        <button id="btnSave" onclick="saveRatings()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-lg rounded-xl shadow-lg transition">
+        <button id="btnSave" onclick="saveRatings()" class="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 font-black text-sm uppercase tracking-widest text-white rounded-2xl shadow-xl shadow-emerald-950/80 transition">
           Salvar Minhas Notas
         </button>
       </div>
     </main>
 
-    <!-- Aba 2: Comparativo (Com Scroll Horizontal Amplo) -->
+    <!-- Aba 2: Comparativo -->
     <main id="viewCompare" style="display: none;">
-      <div id="blindVoteWarning" style="display: none;" class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-8 text-center space-y-3">
+      <div id="blindVoteWarning" style="display: none;" class="bg-amber-500/10 border border-amber-500/30 rounded-3xl p-8 text-center space-y-3">
         <div class="text-4xl">🙈</div>
         <h3 class="text-xl font-black text-amber-300">Votação Cega Ativada!</h3>
         <p class="text-sm text-slate-300 max-w-md mx-auto">
-          Para evitar votos tendenciosos, você só poderá ver as notas dos outros após salvar suas próprias notas da partida.
+          Para evitar votos influenciados, você só poderá ver as notas dos outros após salvar as suas próprias notas da partida.
         </p>
-        <button onclick="switchTab('rate')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition">
+        <button onclick="switchTab('rate')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition">
           Ir para Avaliação
         </button>
       </div>
 
-      <div id="compareContent" class="overflow-x-auto bg-slate-800 rounded-xl border border-slate-700 shadow-inner">
+      <div id="compareContent" class="overflow-x-auto bg-[#0a1811] rounded-3xl border border-emerald-900/40 shadow-xl">
         <table class="w-full text-left border-collapse min-w-[1100px]">
           <thead>
-            <tr id="compareTableHeader" class="bg-slate-700/70 text-slate-300 text-xs uppercase tracking-wider border-b border-slate-600">
-              <th class="p-4 sticky left-0 bg-slate-800 z-20 min-w-[180px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Atleta</th>
+            <tr id="compareTableHeader" class="bg-[#05110a] text-slate-400 text-[11px] uppercase font-extrabold tracking-wider border-b border-emerald-900/40">
+              <th class="p-4 sticky left-0 bg-[#07140c] z-20 min-w-[180px] shadow-[3px_0_10px_rgba(0,0,0,0.5)]">Atleta</th>
               <th class="p-4 min-w-[110px]">Posição</th>
-              <th class="p-4 text-emerald-400 font-bold min-w-[90px]">Média</th>
+              <th class="p-4 text-emerald-400 font-black min-w-[90px]">Média</th>
             </tr>
           </thead>
-          <tbody id="compareTableBody" class="divide-y divide-slate-700 text-sm"></tbody>
+          <tbody id="compareTableBody" class="divide-y divide-emerald-950/60 text-sm"></tbody>
         </table>
       </div>
-      <p class="text-xs text-slate-400 text-right mt-2 mr-1">👉 Deslize para o lado para conferir todos os amigos</p>
+      <p class="text-[11px] text-slate-400 text-right mt-2 mr-1">👉 Deslize horizontalmente para visualizar todos os amigos</p>
     </main>
 
-    <!-- Aba 3: Oscilômetro / Tendência -->
+    <!-- Aba 3: Oscilômetro -->
     <main id="viewTrend" style="display: none;" class="space-y-4">
-      <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 text-sm text-slate-300">
-        Compara o rendimento dos atletas na partida atual contra a partida imediatamente anterior.
+      <div class="bg-[#0a1811] p-4 rounded-2xl border border-emerald-900/40 text-xs font-semibold text-slate-300">
+        📈 Comparativo do rendimento dos atletas na partida atual contra o jogo anterior.
       </div>
       <div id="trendCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
     </main>
 
     <!-- Aba 4: Bolão de Palpites -->
-    <main id="viewBolao" style="display: none;" class="space-y-6">
-      <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 space-y-4">
+    <main id="viewBolao" style="display: none;" class="space-y-5">
+      <div class="bg-gradient-to-b from-[#0e2419] to-[#0a1811] p-6 rounded-3xl border border-emerald-500/20 shadow-lg space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <h3 class="text-lg font-black text-white">Seu Palpite para esta Partida</h3>
-            <span id="bolaoMatchTitle" class="text-xs text-emerald-400 font-semibold block"></span>
+            <h3 class="text-base font-black text-white uppercase tracking-wider">Seu Palpite na Partida</h3>
+            <span id="bolaoMatchTitle" class="text-xs text-emerald-400 font-semibold block mt-0.5"></span>
           </div>
           <span id="bolaoLockBadge" class="text-xs font-bold px-3 py-1 rounded-full w-fit"></span>
         </div>
 
         <div class="flex items-center justify-center gap-4 py-2">
           <div class="text-center">
-            <span class="block font-bold text-sm text-slate-300 mb-1">Palmeiras</span>
-            <input id="inputPredPalmeiras" type="number" min="0" max="20" class="w-16 h-14 bg-slate-900 border border-slate-700 rounded-xl text-center text-2xl font-black text-white focus:outline-none focus:border-emerald-500">
+            <span class="block font-bold text-xs text-slate-400 uppercase tracking-wider mb-1.5">Palmeiras</span>
+            <input id="inputPredPalmeiras" type="number" min="0" max="20" class="w-16 h-14 bg-[#050e09] border border-emerald-900/80 rounded-2xl text-center text-3xl font-black text-white focus:outline-none focus:border-emerald-400">
           </div>
-          <span class="text-2xl font-black text-slate-600 mt-5">X</span>
+          <span class="text-2xl font-black text-emerald-600/60 mt-5">✕</span>
           <div class="text-center">
-            <span id="bolaoOpponentName" class="block font-bold text-sm text-slate-300 mb-1">Adversário</span>
-            <input id="inputPredOpponent" type="number" min="0" max="20" class="w-16 h-14 bg-slate-900 border border-slate-700 rounded-xl text-center text-2xl font-black text-white focus:outline-none focus:border-emerald-500">
+            <span id="bolaoOpponentName" class="block font-bold text-xs text-slate-400 uppercase tracking-wider mb-1.5">Adversário</span>
+            <input id="inputPredOpponent" type="number" min="0" max="20" class="w-16 h-14 bg-[#050e09] border border-emerald-900/80 rounded-2xl text-center text-3xl font-black text-white focus:outline-none focus:border-emerald-400">
           </div>
         </div>
 
-        <button id="btnSavePrediction" onclick="savePrediction()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-sm rounded-xl transition">
+        <button id="btnSavePrediction" onclick="savePrediction()" class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 font-extrabold text-xs uppercase tracking-wider text-white rounded-xl shadow-md transition">
           Confirmar Palpite
         </button>
         <p id="bolaoLockText" style="display: none;" class="text-xs text-center text-rose-400 font-semibold">
@@ -183,138 +206,137 @@
         </p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-slate-800 rounded-xl border border-slate-700 p-4 space-y-3">
-          <h4 class="font-bold text-slate-200 text-sm">Palpites Registrados no Jogo</h4>
-          <div id="matchPredictionsList" class="divide-y divide-slate-700 text-sm"></div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div class="bg-[#0a1811] rounded-3xl border border-emerald-900/40 p-5 space-y-3">
+          <h4 class="font-extrabold text-white text-xs uppercase tracking-wider">Palpites Registrados</h4>
+          <div id="matchPredictionsList" class="divide-y divide-emerald-950/60 text-sm"></div>
         </div>
 
-        <div class="bg-slate-800 rounded-xl border border-slate-700 p-4 space-y-3">
-          <h4 class="font-bold text-slate-200 text-sm">Top 5 - Classificação do Bolão</h4>
-          <p class="text-xs text-slate-400">Placar exato: 2 pts • Acerto de vencedor/empate: 1 pt</p>
-          <div id="bolaoRankingList" class="divide-y divide-slate-700 text-sm"></div>
+        <div class="bg-[#0a1811] rounded-3xl border border-emerald-900/40 p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="font-extrabold text-white text-xs uppercase tracking-wider">Top 5 - Classificação do Bolão</h4>
+            <span class="text-[10px] text-emerald-400/80 font-bold uppercase">2 pts / 1 pt</span>
+          </div>
+          <div id="bolaoRankingList" class="divide-y divide-emerald-950/60 text-sm"></div>
         </div>
       </div>
     </main>
 
-    <!-- Aba 5: Ranking Craques & Bagres -->
-    <main id="viewRanking" style="display: none;" class="space-y-6">
+    <!-- Aba 5: Craques & Bagres -->
+    <main id="viewRanking" style="display: none;" class="space-y-5">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-gradient-to-br from-emerald-900/60 to-slate-800 border-2 border-emerald-500/50 p-6 rounded-2xl flex items-center gap-4">
-          <div class="text-4xl">🌟</div>
+        <div class="bg-gradient-to-br from-emerald-900/50 to-[#0a1811] border border-emerald-500/40 p-6 rounded-3xl flex items-center gap-4 shadow-lg shadow-emerald-950/40">
+          <div class="w-14 h-14 bg-emerald-800/40 rounded-2xl flex items-center justify-center text-3xl border border-emerald-400/30">🌟</div>
           <div>
-            <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest block">Craque do Mês</span>
+            <span class="text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest block">Craque do Mês</span>
             <h3 id="craqueName" class="text-2xl font-black text-white">-</h3>
-            <p id="craqueScore" class="text-sm text-emerald-200 mt-0.5">Média: -</p>
+            <p id="craqueScore" class="text-xs text-emerald-300/80 mt-0.5 font-semibold">Média: -</p>
           </div>
         </div>
 
-        <div class="bg-gradient-to-br from-rose-950/60 to-slate-800 border-2 border-rose-500/50 p-6 rounded-2xl flex items-center gap-4">
-          <div class="text-4xl">🐟</div>
+        <div class="bg-gradient-to-br from-rose-950/40 to-[#0a1811] border border-rose-500/30 p-6 rounded-3xl flex items-center gap-4 shadow-lg shadow-rose-950/30">
+          <div class="w-14 h-14 bg-rose-900/30 rounded-2xl flex items-center justify-center text-3xl border border-rose-500/20">🐟</div>
           <div>
-            <span class="text-xs font-bold text-rose-400 uppercase tracking-widest block">Bagre do Mês</span>
+            <span class="text-[10px] font-extrabold text-rose-400 uppercase tracking-widest block">Bagre do Mês</span>
             <h3 id="bagreName" class="text-2xl font-black text-white">-</h3>
-            <p id="bagreScore" class="text-sm text-rose-200 mt-0.5">Média: -</p>
+            <p id="bagreScore" class="text-xs text-rose-300/80 mt-0.5 font-semibold">Média: -</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-slate-800 rounded-xl border border-slate-700 p-4">
-        <h4 class="font-bold text-slate-200 mb-3 text-sm">Classificação Geral Acumulada</h4>
-        <div id="monthlyRankingList" class="divide-y divide-slate-700 text-sm"></div>
+      <div class="bg-[#0a1811] rounded-3xl border border-emerald-900/40 p-5">
+        <h4 class="font-extrabold text-white text-xs uppercase tracking-wider mb-3">Classificação Geral Acumulada</h4>
+        <div id="monthlyRankingList" class="divide-y divide-emerald-950/60 text-sm"></div>
       </div>
     </main>
   </div>
 
   <!-- MODAL DE NOVO JOGO -->
-  <div id="newMatchModal" style="display: none;" class="fixed inset-0 bg-black/80 items-center justify-center p-4 z-50">
-    <div class="bg-slate-800 p-6 rounded-2xl border border-emerald-500 max-w-md w-full space-y-4">
+  <div id="newMatchModal" style="display: none;" class="fixed inset-0 bg-black/85 items-center justify-center p-4 z-50 backdrop-blur-sm">
+    <div class="bg-[#0a1811] p-6 rounded-3xl border border-emerald-500/40 max-w-md w-full space-y-4 shadow-2xl">
       <h3 class="text-xl font-black text-white">Cadastrar Próximo Jogo ⚽</h3>
       <div class="space-y-3">
         <div>
           <label class="text-xs text-slate-300 font-semibold block mb-1">Adversário:</label>
           <input id="modalOpponent" type="text" placeholder="Ex: Corinthians, Flamengo..." 
-                 class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white font-bold focus:border-emerald-500 focus:outline-none">
+                 class="w-full bg-[#050e09] border border-emerald-900/80 rounded-xl p-3 text-white font-bold focus:border-emerald-400 focus:outline-none">
         </div>
         <div>
           <label class="text-xs text-slate-300 font-semibold block mb-1">Competição / Detalhes:</label>
           <input id="modalCompetition" type="text" placeholder="Ex: Brasileirão, Allianz Parque..." 
-                 class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white font-bold focus:border-emerald-500 focus:outline-none">
+                 class="w-full bg-[#050e09] border border-emerald-900/80 rounded-xl p-3 text-white font-bold focus:border-emerald-400 focus:outline-none">
         </div>
         <div>
           <label class="text-xs text-slate-300 font-semibold block mb-1">Data e Hora de Início do Jogo:</label>
           <input id="modalMatchTime" type="datetime-local" 
-                 class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white font-bold focus:border-emerald-500 focus:outline-none">
+                 class="w-full bg-[#050e09] border border-emerald-900/80 rounded-xl p-3 text-white font-bold focus:border-emerald-400 focus:outline-none">
           <span class="text-[11px] text-slate-400 mt-1 block">A partir deste horário: bolão trava e notas liberam por 24h.</span>
         </div>
       </div>
       <div class="flex gap-2 pt-2">
-        <button onclick="closeNewMatchModal()" class="w-1/2 py-2.5 bg-slate-700 hover:bg-slate-600 font-bold rounded-xl text-slate-300 transition">
+        <button onclick="closeNewMatchModal()" class="w-1/2 py-3 bg-slate-800 hover:bg-slate-700 font-bold rounded-xl text-slate-300 text-xs uppercase tracking-wider transition">
           Cancelar
         </button>
-        <button id="btnCreateMatch" onclick="createMatchSubmit()" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-500 font-bold rounded-xl text-white transition">
+        <button id="btnCreateMatch" onclick="createMatchSubmit()" class="w-1/2 py-3 bg-emerald-500 hover:bg-emerald-400 font-extrabold rounded-xl text-slate-950 text-xs uppercase tracking-wider transition">
           Publicar Jogo
         </button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL DEFINIR PLACAR OFICIAL (CELÃO) -->
-  <div id="scoreModal" style="display: none;" class="fixed inset-0 bg-black/80 items-center justify-center p-4 z-50">
-    <div class="bg-slate-800 p-6 rounded-2xl border border-amber-500 max-w-md w-full space-y-4">
+  <!-- MODAL DEFINIR PLACAR -->
+  <div id="scoreModal" style="display: none;" class="fixed inset-0 bg-black/85 items-center justify-center p-4 z-50 backdrop-blur-sm">
+    <div class="bg-[#0a1811] p-6 rounded-3xl border border-amber-500/40 max-w-md w-full space-y-4 shadow-2xl">
       <h3 class="text-xl font-black text-white">Placar Oficial do Jogo 🏁</h3>
       <div class="flex items-center justify-center gap-4 py-2">
         <div class="text-center">
-          <span class="block font-bold text-xs text-slate-300 mb-1">Palmeiras</span>
-          <input id="scorePalmeiras" type="number" min="0" max="20" class="w-16 h-12 bg-slate-900 border border-slate-700 rounded-lg text-center text-xl font-black text-white">
+          <span class="block font-bold text-xs text-slate-300 mb-1 uppercase">Palmeiras</span>
+          <input id="scorePalmeiras" type="number" min="0" max="20" class="w-16 h-14 bg-[#050e09] border border-emerald-900/80 rounded-xl text-center text-2xl font-black text-white">
         </div>
-        <span class="text-xl font-bold text-slate-500 mt-4">X</span>
+        <span class="text-xl font-black text-slate-500 mt-4">✕</span>
         <div class="text-center">
-          <span id="scoreModalOpponent" class="block font-bold text-xs text-slate-300 mb-1">Adversário</span>
-          <input id="scoreOpponent" type="number" min="0" max="20" class="w-16 h-12 bg-slate-900 border border-slate-700 rounded-lg text-center text-xl font-black text-white">
+          <span id="scoreModalOpponent" class="block font-bold text-xs text-slate-300 mb-1 uppercase">Adversário</span>
+          <input id="scoreOpponent" type="number" min="0" max="20" class="w-16 h-14 bg-[#050e09] border border-emerald-900/80 rounded-xl text-center text-2xl font-black text-white">
         </div>
       </div>
       <div class="flex gap-2 pt-2">
-        <button onclick="closeScoreModal()" class="w-1/2 py-2.5 bg-slate-700 hover:bg-slate-600 font-bold rounded-xl text-slate-300 transition">
+        <button onclick="closeScoreModal()" class="w-1/2 py-3 bg-slate-800 hover:bg-slate-700 font-bold rounded-xl text-slate-300 text-xs uppercase tracking-wider transition">
           Cancelar
         </button>
-        <button onclick="saveFinalScore()" class="w-1/2 py-2.5 bg-amber-500 hover:bg-amber-400 font-bold rounded-xl text-slate-950 transition">
+        <button onclick="saveFinalScore()" class="w-1/2 py-3 bg-amber-400 hover:bg-amber-300 font-extrabold rounded-xl text-slate-950 text-xs uppercase tracking-wider transition">
           Salvar Placar
         </button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL GERENCIAR AMIGOS (CADASTRAR E REMOVER) -->
-  <div id="manageUsersModal" style="display: none;" class="fixed inset-0 bg-black/80 items-center justify-center p-4 z-50">
-    <div class="bg-slate-800 p-6 rounded-2xl border border-sky-500 max-w-md w-full space-y-5">
-      <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+  <!-- MODAL GERENCIAR AMIGOS -->
+  <div id="manageUsersModal" style="display: none;" class="fixed inset-0 bg-black/85 items-center justify-center p-4 z-50 backdrop-blur-sm">
+    <div class="bg-[#0a1811] p-6 rounded-3xl border border-sky-500/40 max-w-md w-full space-y-5 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-emerald-950 pb-3">
         <h3 class="text-xl font-black text-white">Gerenciar Amigos 👥</h3>
         <button onclick="closeManageUsersModal()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
       </div>
 
-      <!-- Formulário de Adicionar -->
       <div class="space-y-2">
         <label class="text-xs text-slate-300 font-semibold block">Cadastrar Novo Amigo:</label>
         <div class="flex gap-2">
           <input id="modalUserName" type="text" placeholder="Ex: Paulinho, Dan..." 
-                 class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold text-sm focus:border-sky-500 focus:outline-none">
-          <button id="btnCreateUser" onclick="createUserSubmit()" class="px-4 py-2 bg-sky-500 hover:bg-sky-400 font-black rounded-xl text-slate-950 text-xs transition shrink-0">
+                 class="w-full bg-[#050e09] border border-emerald-900/80 rounded-xl px-3 py-2 text-white font-bold text-sm focus:border-sky-400 focus:outline-none">
+          <button id="btnCreateUser" onclick="createUserSubmit()" class="px-4 py-2 bg-sky-400 hover:bg-sky-300 font-black rounded-xl text-slate-950 text-xs uppercase tracking-wider transition shrink-0">
             Adicionar
           </button>
         </div>
       </div>
 
-      <!-- Lista de Amigos com Botão de Remover -->
-      <div class="space-y-2 pt-2 border-t border-slate-700">
-        <label class="text-xs text-slate-300 font-semibold block">Amigos Atuais no Sistema:</label>
-        <div id="usersManageList" class="max-h-56 overflow-y-auto divide-y divide-slate-700/60 bg-slate-900/60 rounded-xl border border-slate-700 p-2 space-y-1">
-          <!-- Gerado dinamicamente -->
+      <div class="space-y-2 pt-2 border-t border-emerald-950">
+        <label class="text-xs text-slate-300 font-semibold block">Amigos no Sistema:</label>
+        <div id="usersManageList" class="max-h-56 overflow-y-auto divide-y divide-emerald-950/40 bg-[#050e09] rounded-2xl border border-emerald-950 p-2 space-y-1">
         </div>
       </div>
 
       <div class="pt-1">
-        <button onclick="closeManageUsersModal()" class="w-full py-2.5 bg-slate-700 hover:bg-slate-600 font-bold rounded-xl text-slate-300 text-sm transition">
+        <button onclick="closeManageUsersModal()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 font-bold rounded-xl text-slate-300 text-xs uppercase tracking-wider transition">
           Fechar
         </button>
       </div>
@@ -442,7 +464,7 @@
       }
       FRIENDS.forEach(friend => {
         const th = document.createElement('th');
-        th.className = "p-4 text-center font-bold text-slate-300 min-w-[120px]";
+        th.className = "p-4 text-center font-black text-slate-300 min-w-[120px]";
         th.textContent = friend;
         headerRow.appendChild(th);
       });
@@ -460,7 +482,6 @@
       }
     }
 
-    // Modal de Gerenciar Amigos (Cadastrar e Deletar)
     function openManageUsersModal() {
       document.getElementById('manageUsersModal').style.display = 'flex';
       document.getElementById('modalUserName').value = '';
@@ -478,16 +499,16 @@
       FRIENDS.forEach(friend => {
         const isCelao = cleanStr(friend) === 'celao';
         const row = document.createElement('div');
-        row.className = "flex items-center justify-between p-2 hover:bg-slate-800/60 rounded-lg";
+        row.className = "flex items-center justify-between p-2 hover:bg-emerald-950/40 rounded-xl transition";
         
         row.innerHTML = `
           <div class="flex items-center gap-2">
             <span class="font-bold text-white text-sm">${friend}</span>
-            ${isCelao ? '<span class="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/30">Admin</span>' : ''}
+            ${isCelao ? '<span class="text-[10px] bg-amber-500/20 text-amber-300 font-black px-1.5 py-0.5 rounded border border-amber-500/30">ADMIN</span>' : ''}
           </div>
           ${isCelao 
             ? '<span class="text-xs text-slate-500 italic">Protegido</span>' 
-            : `<button onclick="deleteUserSubmit('${friend}')" class="text-xs bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white px-2.5 py-1 rounded-md border border-rose-500/40 transition">
+            : `<button onclick="deleteUserSubmit('${friend}')" class="text-xs bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white font-bold px-2.5 py-1 rounded-lg border border-rose-500/30 transition">
                  Remover
                </button>`
           }
@@ -722,14 +743,14 @@
         range.disabled = false;
         range.classList.remove('opacity-30', 'cursor-not-allowed');
         val.textContent = Number(range.value).toFixed(1);
-        val.classList.remove('text-slate-500');
+        val.classList.remove('text-slate-600');
         val.classList.add('text-emerald-400');
       } else {
         range.disabled = true;
         range.classList.add('opacity-30', 'cursor-not-allowed');
         val.textContent = 'S/N';
         val.classList.remove('text-emerald-400');
-        val.classList.add('text-slate-500');
+        val.classList.add('text-slate-600');
       }
     }
 
@@ -757,7 +778,7 @@
 
       if (!hasStarted) {
         rateLockWarning.style.display = 'block';
-        rateLockWarning.className = 'bg-amber-500/10 border border-amber-500/30 rounded-2xl p-8 text-center space-y-3';
+        rateLockWarning.className = 'bg-amber-500/10 border border-amber-500/30 rounded-3xl p-8 text-center space-y-3';
         rateLockIcon.textContent = '⏳';
         rateLockTitle.textContent = 'Votação ainda não liberada!';
         rateLockTitle.className = 'text-xl font-black text-amber-300';
@@ -780,7 +801,7 @@
 
       if (isExpired && !hasVoted) {
         rateLockWarning.style.display = 'block';
-        rateLockWarning.className = 'bg-rose-500/10 border border-rose-500/30 rounded-2xl p-8 text-center space-y-3';
+        rateLockWarning.className = 'bg-rose-500/10 border border-rose-500/30 rounded-3xl p-8 text-center space-y-3';
         rateLockIcon.textContent = '🔒';
         rateLockTitle.textContent = 'Prazo de Avaliação Encerrado!';
         rateLockTitle.className = 'text-xl font-black text-rose-400';
@@ -810,7 +831,7 @@
         : players;
 
       if (displayPlayers.length === 0 && isReadOnly) {
-        list.innerHTML = `<div class="col-span-2 text-center text-slate-400 py-8">Nenhum jogador atuou ou foi avaliado por você nesta partida.</div>`;
+        list.innerHTML = `<div class="col-span-2 text-center text-slate-400 py-8 font-semibold">Nenhum jogador atuou ou foi avaliado por você nesta partida.</div>`;
         return;
       }
 
@@ -821,19 +842,19 @@
         const isPlayed = hasScore || !existing;
 
         const card = document.createElement('div');
-        card.className = "bg-slate-800/80 p-4 rounded-xl border border-slate-700 flex flex-col justify-between gap-3";
+        card.className = "bg-[#0a1811] p-4 rounded-2xl border border-emerald-900/40 hover:border-emerald-700/50 flex flex-col justify-between gap-3 transition shadow-sm";
 
         if (isReadOnly) {
           card.innerHTML = `
             <div class="flex items-center justify-between">
               <div>
-                <span class="font-bold text-base text-white">${p.player_name}</span>
-                <span class="text-xs font-semibold px-2 py-0.5 ml-2 bg-slate-700 text-slate-300 rounded">${p.position}</span>
+                <span class="font-extrabold text-base text-white">${p.player_name}</span>
+                <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 ml-2 bg-[#05110a] text-emerald-400 border border-emerald-900/60 rounded-md">${p.position}</span>
               </div>
-              <span class="text-xs font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">Jogou</span>
+              <span class="text-[11px] font-black uppercase text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-lg border border-emerald-500/30">Jogou</span>
             </div>
-            <div class="flex items-center justify-between pt-2 border-t border-slate-700/50">
-              <span class="text-xs text-slate-400">Sua Nota Registrada:</span>
+            <div class="flex items-center justify-between pt-2 border-t border-emerald-950">
+              <span class="text-xs text-slate-400 font-medium">Sua Nota Registrada:</span>
               <span class="text-2xl font-black text-emerald-400">${Number(currentScore).toFixed(1)}</span>
             </div>
           `;
@@ -841,20 +862,20 @@
           card.innerHTML = `
             <div class="flex items-center justify-between">
               <div>
-                <span class="font-bold text-base text-white">${p.player_name}</span>
-                <span class="text-xs font-semibold px-2 py-0.5 ml-2 bg-slate-700 text-slate-300 rounded">${p.position}</span>
+                <span class="font-extrabold text-base text-white">${p.player_name}</span>
+                <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 ml-2 bg-[#05110a] text-emerald-400 border border-emerald-900/60 rounded-md">${p.position}</span>
               </div>
-              <label class="flex items-center gap-1.5 cursor-pointer select-none text-xs text-slate-300 bg-slate-900/60 px-2 py-1 rounded border border-slate-700">
-                <input type="checkbox" id="chk-${p.id}" ${isPlayed ? 'checked' : ''} onchange="togglePlayedStatus('${p.id}')" class="accent-emerald-500">
+              <label class="flex items-center gap-1.5 cursor-pointer select-none text-xs font-semibold text-slate-300 bg-[#05110a] px-2.5 py-1 rounded-xl border border-emerald-950 hover:border-emerald-800 transition">
+                <input type="checkbox" id="chk-${p.id}" ${isPlayed ? 'checked' : ''} onchange="togglePlayedStatus('${p.id}')" class="accent-emerald-500 rounded">
                 <span>Jogou</span>
               </label>
             </div>
-            <div class="flex items-center justify-between gap-3 pt-2 border-t border-slate-700/50">
+            <div class="flex items-center justify-between gap-3 pt-2 border-t border-emerald-950">
               <input type="range" min="0" max="10" step="0.5" value="${currentScore}" id="range-${p.id}" 
-                     class="w-full accent-emerald-500 cursor-pointer ${isPlayed ? '' : 'opacity-30 cursor-not-allowed'}" 
+                     class="w-full accent-emerald-500 cursor-pointer h-2 bg-[#050e09] rounded-lg ${isPlayed ? '' : 'opacity-20 cursor-not-allowed'}" 
                      ${isPlayed ? '' : 'disabled'}
                      oninput="document.getElementById('val-${p.id}').textContent = Number(this.value).toFixed(1)">
-              <span id="val-${p.id}" class="text-lg font-black min-w-[2.5rem] text-right ${isPlayed ? 'text-emerald-400' : 'text-slate-500'}">
+              <span id="val-${p.id}" class="text-xl font-black min-w-[2.8rem] text-right ${isPlayed ? 'text-emerald-400' : 'text-slate-600'}">
                 ${isPlayed ? Number(currentScore).toFixed(1) : 'S/N'}
               </span>
             </div>
@@ -933,13 +954,13 @@
           const r = ratings.find(item => item.match_player_id === p.id && item.friend_name === f);
           const hasPlayed = r && Number(r.score) >= 0;
           const displayScore = hasPlayed ? Number(r.score).toFixed(1) : (r && Number(r.score) === -1 ? 'S/N' : '-');
-          friendCols += `<td class="p-4 text-center font-mono ${hasPlayed ? 'text-white font-black text-lg' : 'text-slate-500 font-semibold'}">${displayScore}</td>`;
+          friendCols += `<td class="p-4 text-center font-mono ${hasPlayed ? 'text-white font-black text-lg' : 'text-slate-600 font-semibold'}">${displayScore}</td>`;
         });
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td class="p-4 font-semibold text-white sticky left-0 bg-slate-800/95 z-10 border-r border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">${p.player_name}</td>
-          <td class="p-4 text-slate-400 text-xs">${p.position}</td>
+          <td class="p-4 font-bold text-white sticky left-0 bg-[#0a1811] z-10 border-r border-emerald-950 shadow-[3px_0_10px_rgba(0,0,0,0.5)]">${p.player_name}</td>
+          <td class="p-4 text-emerald-400/80 text-xs font-semibold uppercase">${p.position}</td>
           <td class="p-4 text-emerald-400 font-black text-lg">${avg}</td>
           ${friendCols}
         `;
@@ -976,24 +997,24 @@
         const prevObj = prevPlayerRatings.find(x => x.name === p.player_name);
         const prevAvg = prevObj ? prevObj.avg : null;
 
-        let diffBadge = `<span class="text-xs text-slate-500 font-medium">Sem dados anteriores</span>`;
+        let diffBadge = `<span class="text-xs text-slate-500 font-medium">Sem dados</span>`;
         if (curAvg !== null && prevAvg !== null) {
           const diff = curAvg - prevAvg;
           if (diff > 0.05) {
-            diffBadge = `<span class="text-xs font-bold text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-500/40">🟢 +${diff.toFixed(1)}</span>`;
+            diffBadge = `<span class="text-xs font-black text-emerald-400 bg-emerald-950 px-2.5 py-1 rounded-full border border-emerald-500/40">🟢 +${diff.toFixed(1)}</span>`;
           } else if (diff < -0.05) {
-            diffBadge = `<span class="text-xs font-bold text-rose-400 bg-rose-950/80 px-2.5 py-1 rounded-full border border-rose-500/40">🔴 ${diff.toFixed(1)}</span>`;
+            diffBadge = `<span class="text-xs font-black text-rose-400 bg-rose-950 px-2.5 py-1 rounded-full border border-rose-500/40">🔴 ${diff.toFixed(1)}</span>`;
           } else {
-            diffBadge = `<span class="text-xs font-bold text-slate-300 bg-slate-800 px-2.5 py-1 rounded-full border border-slate-700">⚪ = 0.0</span>`;
+            diffBadge = `<span class="text-xs font-black text-slate-300 bg-[#05110a] px-2.5 py-1 rounded-full border border-emerald-950">⚪ 0.0</span>`;
           }
         }
 
         const card = document.createElement('div');
-        card.className = "bg-slate-800/80 p-4 rounded-xl border border-slate-700 flex items-center justify-between";
+        card.className = "bg-[#0a1811] p-4 rounded-2xl border border-emerald-900/40 flex items-center justify-between shadow-sm";
         card.innerHTML = `
           <div>
             <div class="font-bold text-white">${p.player_name}</div>
-            <div class="text-xs text-slate-400">${p.position} • Média Atual: <span class="font-bold ${curAvg ? 'text-white' : 'text-slate-500'}">${curAvg ? curAvg.toFixed(1) : '-'}</span></div>
+            <div class="text-xs text-slate-400 mt-0.5">${p.position} • Média: <span class="font-bold ${curAvg ? 'text-white' : 'text-slate-600'}">${curAvg ? curAvg.toFixed(1) : '-'}</span></div>
           </div>
           <div>${diffBadge}</div>
         `;
@@ -1038,23 +1059,23 @@
       if (isLocked) {
         inPalmeiras.disabled = true;
         inOpponent.disabled = true;
-        inPalmeiras.classList.add('opacity-40', 'cursor-not-allowed');
-        inOpponent.classList.add('opacity-40', 'cursor-not-allowed');
+        inPalmeiras.classList.add('opacity-30', 'cursor-not-allowed');
+        inOpponent.classList.add('opacity-30', 'cursor-not-allowed');
         btnSave.style.display = 'none';
         lockText.style.display = 'block';
 
         lockBadge.textContent = '🔒 Palpites Encerrados';
-        lockBadge.className = 'text-xs font-bold px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30';
+        lockBadge.className = 'text-[11px] uppercase tracking-wider font-extrabold px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30';
       } else {
         inPalmeiras.disabled = false;
         inOpponent.disabled = false;
-        inPalmeiras.classList.remove('opacity-40', 'cursor-not-allowed');
-        inOpponent.classList.remove('opacity-40', 'cursor-not-allowed');
+        inPalmeiras.classList.remove('opacity-30', 'cursor-not-allowed');
+        inOpponent.classList.remove('opacity-30', 'cursor-not-allowed');
         btnSave.style.display = 'block';
         lockText.style.display = 'none';
 
         lockBadge.textContent = '🔓 Palpites Abertos';
-        lockBadge.className = 'text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+        lockBadge.className = 'text-[11px] uppercase tracking-wider font-extrabold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
       }
 
       const myPred = predictions.find(p => p.match_id === currentMatchId && p.friend_name === currentUser);
@@ -1071,13 +1092,13 @@
       listDiv.innerHTML = '';
 
       if (matchPreds.length === 0) {
-        listDiv.innerHTML = `<div class="text-xs text-slate-500 py-2">Nenhum palpite para este jogo ainda.</div>`;
+        listDiv.innerHTML = `<div class="text-xs text-slate-500 py-3 italic">Nenhum palpite para este jogo ainda.</div>`;
       } else {
         matchPreds.forEach(p => {
           let pointsTag = '';
           if (curMatch && curMatch.home_score !== null && curMatch.away_score !== null) {
             const pts = calculatePoints(p.palmeiras_goals, p.opponent_goals, curMatch.home_score, curMatch.away_score);
-            pointsTag = `<span class="ml-2 px-2 py-0.5 rounded text-xs font-black ${pts === 2 ? 'bg-emerald-500 text-slate-950' : (pts === 1 ? 'bg-amber-400 text-slate-950' : 'bg-slate-700 text-slate-400')}">+${pts} pts</span>`;
+            pointsTag = `<span class="ml-2 px-2 py-0.5 rounded text-[11px] font-black ${pts === 2 ? 'bg-emerald-500 text-slate-950' : (pts === 1 ? 'bg-amber-400 text-slate-950' : 'bg-slate-800 text-slate-400')}">+${pts} pts</span>`;
           }
 
           const row = document.createElement('div');
@@ -1085,7 +1106,7 @@
           row.innerHTML = `
             <span class="font-bold text-white">${p.friend_name}</span>
             <div class="flex items-center">
-              <span class="font-mono bg-slate-900 px-2.5 py-1 rounded text-emerald-400 font-black">${p.palmeiras_goals} x ${p.opponent_goals}</span>
+              <span class="font-mono bg-[#050e09] px-2.5 py-1 rounded-xl text-emerald-400 font-black border border-emerald-950">${p.palmeiras_goals} x ${p.opponent_goals}</span>
               ${pointsTag}
             </div>
           `;
@@ -1119,7 +1140,7 @@
         row.className = "flex justify-between items-center py-2.5";
         row.innerHTML = `
           <div class="flex items-center gap-3">
-            <span class="font-mono text-xs w-5 text-slate-400">#${idx + 1}</span>
+            <span class="font-mono text-xs font-bold w-5 text-emerald-500">#${idx + 1}</span>
             <span class="font-bold text-white">${item.name}</span>
           </div>
           <span class="font-mono font-black text-amber-400 text-base">${item.pts} pts</span>
@@ -1175,11 +1196,11 @@
         row.className = "flex justify-between items-center py-2.5";
         row.innerHTML = `
           <div class="flex items-center gap-3">
-            <span class="font-mono text-xs w-5 text-slate-400">#${idx + 1}</span>
+            <span class="font-mono text-xs font-bold w-5 text-emerald-500">#${idx + 1}</span>
             <span class="font-bold text-white">${p.name}</span>
-            <span class="text-xs text-slate-500">${p.pos} (${p.total} avaliações)</span>
+            <span class="text-[11px] text-slate-500">${p.pos} • ${p.total} avaliações</span>
           </div>
-          <span class="font-mono font-black text-emerald-400">${p.avg.toFixed(1)}</span>
+          <span class="font-mono font-black text-emerald-400 text-base">${p.avg.toFixed(1)}</span>
         `;
         list.appendChild(row);
       });
@@ -1196,8 +1217,8 @@
         const isSelected = t === tab;
         const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
         btn.className = isSelected 
-          ? "px-4 py-2.5 font-bold rounded-lg bg-emerald-600 text-white text-sm" 
-          : "px-4 py-2.5 font-bold rounded-lg bg-slate-800 text-slate-400 text-sm";
+          ? "px-4 py-2.5 font-extrabold rounded-2xl bg-emerald-500 text-slate-950 text-xs uppercase tracking-wider shrink-0 transition shadow-md shadow-emerald-950" 
+          : "px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 transition border border-emerald-900/30";
       });
     }
 

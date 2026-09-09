@@ -20,9 +20,9 @@
         <p class="text-slate-400 text-sm mt-1">Digite seu nome para acessar</p>
       </div>
       <div class="space-y-3">
-        <input id="loginInput" type="text" placeholder="Ex: Celão, Lele, Benga..." 
+        <input id="loginInput" type="text" placeholder="Ex: Celão, Gabo, Lele..." 
                class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl px-4 py-3 text-center text-lg font-bold text-white focus:outline-none focus:ring-2 focus:ring-emerald-400">
-        <p id="loginError" style="display: none;" class="text-rose-400 text-xs font-semibold">Nome não autorizado. Use: Celão, Danão, Bona, Gabão, Calango, Benga ou Lele.</p>
+        <p id="loginError" style="display: none;" class="text-rose-400 text-xs font-semibold"></p>
         <button id="btnLogin" onclick="handleLogin()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-base rounded-xl shadow-lg transition">
           Entrar
         </button>
@@ -129,17 +129,11 @@
       <div id="compareContent" class="overflow-x-auto bg-slate-800 rounded-xl border border-slate-700">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="bg-slate-700/70 text-slate-300 text-xs uppercase tracking-wider border-b border-slate-600">
+            <tr id="compareTableHeader" class="bg-slate-700/70 text-slate-300 text-xs uppercase tracking-wider border-b border-slate-600">
               <th class="p-3">Atleta</th>
               <th class="p-3">Posição</th>
               <th class="p-3 text-emerald-400 font-bold">Média</th>
-              <th class="p-3 text-center">Celão</th>
-              <th class="p-3 text-center">Danão</th>
-              <th class="p-3 text-center">Bona</th>
-              <th class="p-3 text-center">Gabão</th>
-              <th class="p-3 text-center">Calango</th>
-              <th class="p-3 text-center">Benga</th>
-              <th class="p-3 text-center">Lele</th>
+              <!-- Colunas dos amigos geradas dinamicamente aqui -->
             </tr>
           </thead>
           <tbody id="compareTableBody" class="divide-y divide-slate-700 text-sm"></tbody>
@@ -293,8 +287,8 @@
     const SUPABASE_KEY = "sb_publishable_kP5nMFx8P0OmrV0gocZqEg_0ZXI56r1";
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Lista atualizada com os 7 amigos
-    const FRIENDS = ["Celão", "Danão", "Bona", "Gabão", "Calango", "Benga", "Lele"];
+    // CENTRALIZAÇÃO ÚNICA: Lista oficial de amigos (adicionado Gabo)
+    const FRIENDS = ["Celão", "Danão", "Bona", "Gabão", "Calango", "Benga", "Lele", "Gabo"];
 
     const INITIAL_MATCH = {
       opponent: "Botafogo",
@@ -350,7 +344,9 @@
         document.getElementById('loginError').style.display = 'none';
         checkSession();
       } else {
-        document.getElementById('loginError').style.display = 'block';
+        const err = document.getElementById('loginError');
+        err.textContent = `Nome não autorizado. Use: ${FRIENDS.join(', ')}.`;
+        err.style.display = 'block';
       }
     }
 
@@ -379,11 +375,27 @@
         adminToggleContainer.style.display = isCelao ? 'flex' : 'none';
 
         toggleAdminMode();
+        setupDynamicTableHeaders();
         initApp();
       } else {
         loginScreen.style.display = 'flex';
         appScreen.style.display = 'none';
       }
+    }
+
+    // Geração dinâmica das colunas de amigos no Comparativo
+    function setupDynamicTableHeaders() {
+      const headerRow = document.getElementById('compareTableHeader');
+      // Mantém os 3 primeiros (Atleta, Posição, Média) e remove cabeçalhos antigos de amigos
+      while (headerRow.children.length > 3) {
+        headerRow.removeChild(headerRow.lastChild);
+      }
+      FRIENDS.forEach(friend => {
+        const th = document.createElement('th');
+        th.className = "p-3 text-center font-bold text-slate-300";
+        th.textContent = friend;
+        headerRow.appendChild(th);
+      });
     }
 
     function toggleAdminMode() {
@@ -945,8 +957,10 @@
         });
       }
 
-      // Ranking do Bolão acumulando os 7 amigos
-      const scoresByFriend = { "Celão": 0, "Danão": 0, "Bona": 0, "Gabão": 0, "Calango": 0, "Benga": 0, "Lele": 0 };
+      // DINÂMICO: Inicializa scores de todos os amigos automaticamente
+      const scoresByFriend = {};
+      FRIENDS.forEach(f => scoresByFriend[f] = 0);
+
       allMatches.forEach(m => {
         if (m.home_score !== null && m.away_score !== null) {
           const mPreds = predictions.filter(p => p.match_id === m.id);
@@ -958,8 +972,12 @@
         }
       });
 
-      const rankingArray = Object.entries(scoresByFriend).map(([name, pts]) => ({ name, pts })).sort((a, b) => b.pts - a.pts);
+      // Top 5 do Bolão
+      const rankingArray = Object.entries(scoresByFriend)
+        .map(([name, pts]) => ({ name, pts }))
+        .sort((a, b) => b.pts - a.pts);
       const top5Ranking = rankingArray.slice(0, 5);
+
       const bolaoListDiv = document.getElementById('bolaoRankingList');
       bolaoListDiv.innerHTML = '';
       top5Ranking.forEach((item, idx) => {

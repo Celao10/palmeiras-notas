@@ -127,18 +127,18 @@
       </div>
 
       <div id="compareContent" class="overflow-x-auto bg-slate-800 rounded-xl border border-slate-700">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr id="compareTableHeader" class="bg-slate-700/70 text-slate-300 text-xs uppercase tracking-wider border-b border-slate-600">
-              <th class="p-3">Atleta</th>
-              <th class="p-3">Posição</th>
-              <th class="p-3 text-emerald-400 font-bold">Média</th>
-              <!-- Colunas dos amigos geradas dinamicamente aqui -->
-            </tr>
-          </thead>
-          <tbody id="compareTableBody" class="divide-y divide-slate-700 text-sm"></tbody>
-        </table>
-      </div>
+      <table class="w-full text-left border-collapse min-w-[720px]">
+        <thead>
+          <tr id="compareTableHeader" class="bg-slate-700/70 text-slate-300 text-xs uppercase tracking-wider border-b border-slate-600">
+            <th class="p-3 sticky left-0 bg-slate-800 z-10 min-w-[140px]">Atleta</th>
+            <th class="p-3 min-w-[90px]">Posição</th>
+            <th class="p-3 text-emerald-400 font-bold min-w-[70px]">Média</th>
+            <!-- Colunas dos amigos geradas dinamicamente aqui -->
+          </tr>
+        </thead>
+        <tbody id="compareTableBody" class="divide-y divide-slate-700 text-sm"></tbody>
+      </table>
+    </div>
     </main>
 
     <!-- Aba 3: Oscilômetro / Tendência -->
@@ -392,7 +392,7 @@
       }
       FRIENDS.forEach(friend => {
         const th = document.createElement('th');
-        th.className = "p-3 text-center font-bold text-slate-300";
+        th.className = "p-3 text-center font-bold text-slate-300 min-w-[80px]";
         th.textContent = friend;
         headerRow.appendChild(th);
       });
@@ -802,7 +802,7 @@
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td class="p-3 font-semibold text-white">${p.player_name}</td>
+          <td class="p-3 font-semibold text-white sticky left-0 bg-slate-800/95 z-10 border-r border-slate-700/50">${p.player_name}</td>
           <td class="p-3 text-slate-400 text-xs">${p.position}</td>
           <td class="p-3 text-emerald-400 font-black text-base">${avg}</td>
           ${friendCols}

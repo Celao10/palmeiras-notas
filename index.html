@@ -46,8 +46,8 @@
             <button onclick="openScoreModal()" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-3 py-1.5 rounded-lg shadow transition">
               Definir Placar Final
             </button>
-            <button onclick="openNewUserModal()" class="bg-sky-400 hover:bg-sky-300 text-slate-950 font-black text-xs px-3 py-1.5 rounded-lg shadow transition">
-              + Novo Amigo
+            <button onclick="openManageUsersModal()" class="bg-sky-400 hover:bg-sky-300 text-slate-950 font-black text-xs px-3 py-1.5 rounded-lg shadow transition">
+              👥 Gerenciar Amigos
             </button>
           </div>
         </div>
@@ -136,7 +136,6 @@
               <th class="p-4 sticky left-0 bg-slate-800 z-20 min-w-[180px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Atleta</th>
               <th class="p-4 min-w-[110px]">Posição</th>
               <th class="p-4 text-emerald-400 font-bold min-w-[90px]">Média</th>
-              <!-- Colunas dinâmicas dos amigos -->
             </tr>
           </thead>
           <tbody id="compareTableBody" class="divide-y divide-slate-700 text-sm"></tbody>
@@ -286,22 +285,37 @@
     </div>
   </div>
 
-  <!-- MODAL NOVO AMIGO (MODO ADMIN CELÃO) -->
-  <div id="newUserModal" style="display: none;" class="fixed inset-0 bg-black/80 items-center justify-center p-4 z-50">
-    <div class="bg-slate-800 p-6 rounded-2xl border border-sky-500 max-w-md w-full space-y-4">
-      <h3 class="text-xl font-black text-white">Cadastrar Novo Amigo 👤</h3>
-      <p class="text-xs text-slate-400">O novo participante poderá logar imediatamente com este nome, dar notas e participar do bolão.</p>
-      <div>
-        <label class="text-xs text-slate-300 font-semibold block mb-1">Nome / Apelido:</label>
-        <input id="modalUserName" type="text" placeholder="Ex: Paulinho, Dan, Zé..." 
-               class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white font-bold focus:border-sky-500 focus:outline-none">
+  <!-- MODAL GERENCIAR AMIGOS (CADASTRAR E REMOVER) -->
+  <div id="manageUsersModal" style="display: none;" class="fixed inset-0 bg-black/80 items-center justify-center p-4 z-50">
+    <div class="bg-slate-800 p-6 rounded-2xl border border-sky-500 max-w-md w-full space-y-5">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+        <h3 class="text-xl font-black text-white">Gerenciar Amigos 👥</h3>
+        <button onclick="closeManageUsersModal()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
       </div>
-      <div class="flex gap-2 pt-2">
-        <button onclick="closeNewUserModal()" class="w-1/2 py-2.5 bg-slate-700 hover:bg-slate-600 font-bold rounded-xl text-slate-300 transition">
-          Cancelar
-        </button>
-        <button id="btnCreateUser" onclick="createUserSubmit()" class="w-1/2 py-2.5 bg-sky-500 hover:bg-sky-400 font-bold rounded-xl text-slate-950 transition">
-          Adicionar
+
+      <!-- Formulário de Adicionar -->
+      <div class="space-y-2">
+        <label class="text-xs text-slate-300 font-semibold block">Cadastrar Novo Amigo:</label>
+        <div class="flex gap-2">
+          <input id="modalUserName" type="text" placeholder="Ex: Paulinho, Dan..." 
+                 class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold text-sm focus:border-sky-500 focus:outline-none">
+          <button id="btnCreateUser" onclick="createUserSubmit()" class="px-4 py-2 bg-sky-500 hover:bg-sky-400 font-black rounded-xl text-slate-950 text-xs transition shrink-0">
+            Adicionar
+          </button>
+        </div>
+      </div>
+
+      <!-- Lista de Amigos com Botão de Remover -->
+      <div class="space-y-2 pt-2 border-t border-slate-700">
+        <label class="text-xs text-slate-300 font-semibold block">Amigos Atuais no Sistema:</label>
+        <div id="usersManageList" class="max-h-56 overflow-y-auto divide-y divide-slate-700/60 bg-slate-900/60 rounded-xl border border-slate-700 p-2 space-y-1">
+          <!-- Gerado dinamicamente -->
+        </div>
+      </div>
+
+      <div class="pt-1">
+        <button onclick="closeManageUsersModal()" class="w-full py-2.5 bg-slate-700 hover:bg-slate-600 font-bold rounded-xl text-slate-300 text-sm transition">
+          Fechar
         </button>
       </div>
     </div>
@@ -312,7 +326,6 @@
     const SUPABASE_KEY = "sb_publishable_kP5nMFx8P0OmrV0gocZqEg_0ZXI56r1";
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Fallback inicial caso a tabela esteja carregando
     let FRIENDS = ["Celão", "Danão", "Bona", "Gabão", "Calango", "Benga", "Lele", "Gabo"];
 
     const INITIAL_MATCH = {
@@ -359,7 +372,6 @@
       return (str || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     }
 
-    // Carrega amigos do Supabase de forma dinâmica
     async function loadFriendsFromDB() {
       try {
         const { data, error } = await db.from('app_users').select('name').order('created_at', { ascending: true });
@@ -448,15 +460,40 @@
       }
     }
 
-    // Funções do Modal de Novo Amigo
-    function openNewUserModal() {
-      document.getElementById('newUserModal').style.display = 'flex';
+    // Modal de Gerenciar Amigos (Cadastrar e Deletar)
+    function openManageUsersModal() {
+      document.getElementById('manageUsersModal').style.display = 'flex';
       document.getElementById('modalUserName').value = '';
-      document.getElementById('modalUserName').focus();
+      renderManageUsersList();
     }
 
-    function closeNewUserModal() {
-      document.getElementById('newUserModal').style.display = 'none';
+    function closeManageUsersModal() {
+      document.getElementById('manageUsersModal').style.display = 'none';
+    }
+
+    function renderManageUsersList() {
+      const listDiv = document.getElementById('usersManageList');
+      listDiv.innerHTML = '';
+
+      FRIENDS.forEach(friend => {
+        const isCelao = cleanStr(friend) === 'celao';
+        const row = document.createElement('div');
+        row.className = "flex items-center justify-between p-2 hover:bg-slate-800/60 rounded-lg";
+        
+        row.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-white text-sm">${friend}</span>
+            ${isCelao ? '<span class="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/30">Admin</span>' : ''}
+          </div>
+          ${isCelao 
+            ? '<span class="text-xs text-slate-500 italic">Protegido</span>' 
+            : `<button onclick="deleteUserSubmit('${friend}')" class="text-xs bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white px-2.5 py-1 rounded-md border border-rose-500/40 transition">
+                 Remover
+               </button>`
+          }
+        `;
+        listDiv.appendChild(row);
+      });
     }
 
     async function createUserSubmit() {
@@ -478,13 +515,33 @@
 
       if (error) {
         console.error(error);
-        return alert('Erro ao salvar no banco. Verifique se o nome já existe.');
+        return alert('Erro ao salvar no banco. Verifique sua conexão.');
       }
 
-      alert(`"${nameInput}" foi cadastrado com sucesso!`);
-      closeNewUserModal();
+      document.getElementById('modalUserName').value = '';
+      await loadFriendsFromDB();
+      renderManageUsersList();
+      setupDynamicTableHeaders();
+      await loadData();
+    }
+
+    async function deleteUserSubmit(friendName) {
+      if (cleanStr(friendName) === 'celao') {
+        return alert('O usuário Celão é o administrador principal e não pode ser removido.');
+      }
+
+      const confirmDelete = confirm(`Tem certeza que deseja remover "${friendName}" do grupo?\n\nEle(a) não conseguirá mais logar nem pontuar.`);
+      if (!confirmDelete) return;
+
+      const { error } = await db.from('app_users').delete().eq('name', friendName);
+
+      if (error) {
+        console.error(error);
+        return alert('Erro ao remover usuário do banco.');
+      }
 
       await loadFriendsFromDB();
+      renderManageUsersList();
       setupDynamicTableHeaders();
       await loadData();
     }

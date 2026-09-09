@@ -113,7 +113,7 @@
       </div>
     </main>
 
-    <!-- Aba 2: Comparativo (Votação Cega) -->
+    <!-- Aba 2: Comparativo (Votação Cega com Scroll Horizontal Amplo) -->
     <main id="viewCompare" style="display: none;">
       <div id="blindVoteWarning" style="display: none;" class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-8 text-center space-y-3">
         <div class="text-4xl">🙈</div>
@@ -126,19 +126,20 @@
         </button>
       </div>
 
-      <div id="compareContent" class="overflow-x-auto bg-slate-800 rounded-xl border border-slate-700">
-      <table class="w-full text-left border-collapse min-w-[720px]">
-        <thead>
-          <tr id="compareTableHeader" class="bg-slate-700/70 text-slate-300 text-xs uppercase tracking-wider border-b border-slate-600">
-            <th class="p-3 sticky left-0 bg-slate-800 z-10 min-w-[140px]">Atleta</th>
-            <th class="p-3 min-w-[90px]">Posição</th>
-            <th class="p-3 text-emerald-400 font-bold min-w-[70px]">Média</th>
-            <!-- Colunas dos amigos geradas dinamicamente aqui -->
-          </tr>
-        </thead>
-        <tbody id="compareTableBody" class="divide-y divide-slate-700 text-sm"></tbody>
-      </table>
-    </div>
+      <div id="compareContent" class="overflow-x-auto bg-slate-800 rounded-xl border border-slate-700 shadow-inner">
+        <table class="w-full text-left border-collapse min-w-[1100px]">
+          <thead>
+            <tr id="compareTableHeader" class="bg-slate-700/70 text-slate-300 text-xs uppercase tracking-wider border-b border-slate-600">
+              <th class="p-4 sticky left-0 bg-slate-800 z-20 min-w-[180px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Atleta</th>
+              <th class="p-4 min-w-[110px]">Posição</th>
+              <th class="p-4 text-emerald-400 font-bold min-w-[90px]">Média</th>
+              <!-- Colunas dinâmicas dos amigos -->
+            </tr>
+          </thead>
+          <tbody id="compareTableBody" class="divide-y divide-slate-700 text-sm"></tbody>
+        </table>
+      </div>
+      <p class="text-xs text-slate-400 text-right mt-2 mr-1">👉 Deslize para o lado para conferir todos os amigos</p>
     </main>
 
     <!-- Aba 3: Oscilômetro / Tendência -->
@@ -287,7 +288,7 @@
     const SUPABASE_KEY = "sb_publishable_kP5nMFx8P0OmrV0gocZqEg_0ZXI56r1";
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // CENTRALIZAÇÃO ÚNICA: Lista oficial de amigos (adicionado Gabo)
+    // Amigos autorizados (8 participantes)
     const FRIENDS = ["Celão", "Danão", "Bona", "Gabão", "Calango", "Benga", "Lele", "Gabo"];
 
     const INITIAL_MATCH = {
@@ -383,16 +384,14 @@
       }
     }
 
-    // Geração dinâmica das colunas de amigos no Comparativo
     function setupDynamicTableHeaders() {
       const headerRow = document.getElementById('compareTableHeader');
-      // Mantém os 3 primeiros (Atleta, Posição, Média) e remove cabeçalhos antigos de amigos
       while (headerRow.children.length > 3) {
         headerRow.removeChild(headerRow.lastChild);
       }
       FRIENDS.forEach(friend => {
         const th = document.createElement('th');
-        th.className = "p-3 text-center font-bold text-slate-300 min-w-[80px]";
+        th.className = "p-4 text-center font-bold text-slate-300 min-w-[120px]";
         th.textContent = friend;
         headerRow.appendChild(th);
       });
@@ -797,14 +796,14 @@
           const r = ratings.find(item => item.match_player_id === p.id && item.friend_name === f);
           const hasPlayed = r && Number(r.score) >= 0;
           const displayScore = hasPlayed ? Number(r.score).toFixed(1) : (r && Number(r.score) === -1 ? 'S/N' : '-');
-          friendCols += `<td class="p-3 text-center font-mono ${hasPlayed ? 'text-white font-bold' : 'text-slate-500'}">${displayScore}</td>`;
+          friendCols += `<td class="p-4 text-center font-mono ${hasPlayed ? 'text-white font-black text-lg' : 'text-slate-500 font-semibold'}">${displayScore}</td>`;
         });
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td class="p-3 font-semibold text-white sticky left-0 bg-slate-800/95 z-10 border-r border-slate-700/50">${p.player_name}</td>
-          <td class="p-3 text-slate-400 text-xs">${p.position}</td>
-          <td class="p-3 text-emerald-400 font-black text-base">${avg}</td>
+          <td class="p-4 font-semibold text-white sticky left-0 bg-slate-800/95 z-10 border-r border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">${p.player_name}</td>
+          <td class="p-4 text-slate-400 text-xs">${p.position}</td>
+          <td class="p-4 text-emerald-400 font-black text-lg">${avg}</td>
           ${friendCols}
         `;
         tbody.appendChild(tr);
@@ -957,7 +956,6 @@
         });
       }
 
-      // DINÂMICO: Inicializa scores de todos os amigos automaticamente
       const scoresByFriend = {};
       FRIENDS.forEach(f => scoresByFriend[f] = 0);
 
@@ -972,7 +970,6 @@
         }
       });
 
-      // Top 5 do Bolão
       const rankingArray = Object.entries(scoresByFriend)
         .map(([name, pts]) => ({ name, pts }))
         .sort((a, b) => b.pts - a.pts);

@@ -46,6 +46,9 @@
             <button onclick="openScoreModal()" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-3 py-1.5 rounded-lg shadow transition">
               Definir Placar Final
             </button>
+            <button onclick="openNewUserModal()" class="bg-sky-400 hover:bg-sky-300 text-slate-950 font-black text-xs px-3 py-1.5 rounded-lg shadow transition">
+              + Novo Amigo
+            </button>
           </div>
         </div>
       </div>
@@ -113,7 +116,7 @@
       </div>
     </main>
 
-    <!-- Aba 2: Comparativo (Votação Cega com Scroll Horizontal Amplo) -->
+    <!-- Aba 2: Comparativo (Com Scroll Horizontal Amplo) -->
     <main id="viewCompare" style="display: none;">
       <div id="blindVoteWarning" style="display: none;" class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-8 text-center space-y-3">
         <div class="text-4xl">🙈</div>
@@ -283,13 +286,34 @@
     </div>
   </div>
 
+  <!-- MODAL NOVO AMIGO (MODO ADMIN CELÃO) -->
+  <div id="newUserModal" style="display: none;" class="fixed inset-0 bg-black/80 items-center justify-center p-4 z-50">
+    <div class="bg-slate-800 p-6 rounded-2xl border border-sky-500 max-w-md w-full space-y-4">
+      <h3 class="text-xl font-black text-white">Cadastrar Novo Amigo 👤</h3>
+      <p class="text-xs text-slate-400">O novo participante poderá logar imediatamente com este nome, dar notas e participar do bolão.</p>
+      <div>
+        <label class="text-xs text-slate-300 font-semibold block mb-1">Nome / Apelido:</label>
+        <input id="modalUserName" type="text" placeholder="Ex: Paulinho, Dan, Zé..." 
+               class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white font-bold focus:border-sky-500 focus:outline-none">
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeNewUserModal()" class="w-1/2 py-2.5 bg-slate-700 hover:bg-slate-600 font-bold rounded-xl text-slate-300 transition">
+          Cancelar
+        </button>
+        <button id="btnCreateUser" onclick="createUserSubmit()" class="w-1/2 py-2.5 bg-sky-500 hover:bg-sky-400 font-bold rounded-xl text-slate-950 transition">
+          Adicionar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const SUPABASE_URL = "https://exkurcyjralifdgdmdjt.supabase.co";
     const SUPABASE_KEY = "sb_publishable_kP5nMFx8P0OmrV0gocZqEg_0ZXI56r1";
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Amigos autorizados (8 participantes)
-    const FRIENDS = ["Celão", "Danão", "Bona", "Gabão", "Calango", "Benga", "Lele", "Gabo"];
+    // Fallback inicial caso a tabela esteja carregando
+    let FRIENDS = ["Celão", "Danão", "Bona", "Gabão", "Calango", "Benga", "Lele", "Gabo"];
 
     const INITIAL_MATCH = {
       opponent: "Botafogo",
@@ -335,7 +359,20 @@
       return (str || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     }
 
-    function handleLogin() {
+    // Carrega amigos do Supabase de forma dinâmica
+    async function loadFriendsFromDB() {
+      try {
+        const { data, error } = await db.from('app_users').select('name').order('created_at', { ascending: true });
+        if (!error && data && data.length > 0) {
+          FRIENDS = data.map(u => u.name);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar lista de usuários:", err);
+      }
+    }
+
+    async function handleLogin() {
+      await loadFriendsFromDB();
       const input = document.getElementById('loginInput').value;
       const match = FRIENDS.find(f => cleanStr(f) === cleanStr(input));
 
@@ -362,7 +399,9 @@
       checkSession();
     }
 
-    function checkSession() {
+    async function checkSession() {
+      await loadFriendsFromDB();
+
       const loginScreen = document.getElementById('loginScreen');
       const appScreen = document.getElementById('appScreen');
       const adminToggleContainer = document.getElementById('adminToggleContainer');
@@ -407,6 +446,47 @@
       } else {
         adminGroup.style.display = 'none';
       }
+    }
+
+    // Funções do Modal de Novo Amigo
+    function openNewUserModal() {
+      document.getElementById('newUserModal').style.display = 'flex';
+      document.getElementById('modalUserName').value = '';
+      document.getElementById('modalUserName').focus();
+    }
+
+    function closeNewUserModal() {
+      document.getElementById('newUserModal').style.display = 'none';
+    }
+
+    async function createUserSubmit() {
+      const nameInput = document.getElementById('modalUserName').value.trim();
+      if (!nameInput) return alert('Por favor, digite o nome ou apelido do amigo.');
+
+      if (FRIENDS.some(f => cleanStr(f) === cleanStr(nameInput))) {
+        return alert('Este nome já está cadastrado!');
+      }
+
+      const btn = document.getElementById('btnCreateUser');
+      btn.disabled = true;
+      btn.textContent = 'Salvando...';
+
+      const { error } = await db.from('app_users').insert([{ name: nameInput }]);
+
+      btn.disabled = false;
+      btn.textContent = 'Adicionar';
+
+      if (error) {
+        console.error(error);
+        return alert('Erro ao salvar no banco. Verifique se o nome já existe.');
+      }
+
+      alert(`"${nameInput}" foi cadastrado com sucesso!`);
+      closeNewUserModal();
+
+      await loadFriendsFromDB();
+      setupDynamicTableHeaders();
+      await loadData();
     }
 
     async function initApp() {

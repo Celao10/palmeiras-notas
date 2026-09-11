@@ -11,14 +11,22 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    /* Scrollbar personalizada sutil */
+    /* Scrollbar personalizada */
     ::-webkit-scrollbar { height: 8px; width: 6px; }
     ::-webkit-scrollbar-track { background: #061811; }
     ::-webkit-scrollbar-thumb { background: #15803d; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #16a34a; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body class="bg-[#08120d] text-slate-100 min-h-screen p-3 md:p-6 selection:bg-emerald-500 selection:text-white">
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastMessage" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-emerald-500 text-slate-950 font-black px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2 text-sm border border-emerald-300">
+    <span id="toastIcon">✅</span>
+    <span id="toastText">Copiado com sucesso!</span>
+  </div>
 
   <!-- TELA DE LOGIN -->
   <div id="loginScreen" style="display: flex;" class="min-h-[85vh] items-center justify-center">
@@ -47,9 +55,8 @@
   <!-- APLICAÇÃO PRINCIPAL -->
   <div id="appScreen" style="display: none;" class="max-w-4xl mx-auto space-y-5">
     
-    <!-- HEADER MOBILE-FIRST LIMPO -->
+    <!-- HEADER -->
     <header class="bg-gradient-to-b from-[#0e251a] to-[#081710] p-4 md:p-5 rounded-3xl shadow-lg border border-emerald-500/20 space-y-3">
-      <!-- Linha Superior: Logo e Perfil -->
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-2.5">
           <span class="text-2xl">🐷</span>
@@ -68,13 +75,11 @@
         </div>
       </div>
 
-      <!-- Seletor de Partida em destaque com largura total -->
       <div class="w-full">
         <select id="matchSelect" onchange="onSelectMatch()" class="w-full bg-[#05110a] text-emerald-100 font-bold text-xs md:text-sm border border-emerald-800/80 rounded-2xl px-3.5 py-2.5 focus:outline-none focus:border-emerald-400 cursor-pointer shadow-inner">
         </select>
       </div>
 
-      <!-- Área Exclusiva do Admin (Celão) -->
       <div id="adminToggleContainer" style="display: none;" class="pt-2 border-t border-emerald-950/70 flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-2 bg-[#05110a] px-2.5 py-1 rounded-xl border border-emerald-900/50">
           <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Modo Admin</span>
@@ -98,7 +103,7 @@
       </div>
     </header>
 
-    <!-- NAVEGAÇÃO DE ABAS (Pills Flutuantes) -->
+    <!-- NAVEGAÇÃO DE ABAS -->
     <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
       <button id="tabRate" onclick="switchTab('rate')" class="px-4 py-2.5 font-extrabold rounded-2xl bg-emerald-500 text-slate-950 text-xs uppercase tracking-wider shrink-0 transition shadow-md shadow-emerald-950">
         Avaliar Partida
@@ -140,7 +145,7 @@
       </div>
     </main>
 
-    <!-- Aba 2: Comparativo -->
+    <!-- Aba 2: Comparativo (Notas da Rodada) -->
     <main id="viewCompare" style="display: none;">
       <div id="blindVoteWarning" style="display: none;" class="bg-amber-500/10 border border-amber-500/30 rounded-3xl p-8 text-center space-y-3">
         <div class="text-4xl">🙈</div>
@@ -154,18 +159,19 @@
       </div>
 
       <div id="compareContent" class="overflow-x-auto bg-[#0a1811] rounded-3xl border border-emerald-900/40 shadow-xl">
-        <table class="w-full text-left border-collapse min-w-[1100px]">
+        <table class="w-full text-left border-collapse min-w-[700px]">
           <thead>
             <tr id="compareTableHeader" class="bg-[#05110a] text-slate-400 text-[11px] uppercase font-extrabold tracking-wider border-b border-emerald-900/40">
-              <th class="p-4 sticky left-0 bg-[#07140c] z-20 min-w-[180px] shadow-[3px_0_10px_rgba(0,0,0,0.5)]">Atleta</th>
-              <th class="p-4 min-w-[110px]">Posição</th>
+              <th class="p-4 sticky left-0 bg-[#07140c] z-20 min-w-[170px] shadow-[3px_0_10px_rgba(0,0,0,0.5)]">Atleta</th>
+              <th class="p-4 min-w-[100px]">Posição</th>
               <th class="p-4 text-emerald-400 font-black min-w-[90px]">Média</th>
+              <!-- Colunas apenas de quem votou serão injetadas aqui -->
             </tr>
           </thead>
           <tbody id="compareTableBody" class="divide-y divide-emerald-950/60 text-sm"></tbody>
         </table>
       </div>
-      <p class="text-[11px] text-slate-400 text-right mt-2 mr-1">👉 Deslize horizontalmente para visualizar todos os amigos</p>
+      <p id="compareScrollHint" class="text-[11px] text-slate-400 text-right mt-2 mr-1">👉 Deslize para o lado para conferir todas as notas</p>
     </main>
 
     <!-- Aba 3: Oscilômetro -->
@@ -225,11 +231,23 @@
 
     <!-- Aba 5: Craques & Bagres -->
     <main id="viewRanking" style="display: none;" class="space-y-5">
+      <!-- BOTÃO DE COMPARTILHAR -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#0a1811] p-4 rounded-3xl border border-emerald-900/40">
+        <div>
+          <h4 class="font-black text-sm uppercase tracking-wider text-white">Resumo da Partida</h4>
+          <p class="text-xs text-slate-400">Envie o Craque e o Bagre direto para o grupo do WhatsApp!</p>
+        </div>
+        <button id="btnShare" onclick="shareMatchSummary()" class="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg shadow-emerald-950/80 flex items-center justify-center gap-2 transition active:scale-95">
+          <span>📲</span>
+          <span>Compartilhar no Zap</span>
+        </button>
+      </div>
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="bg-gradient-to-br from-emerald-900/50 to-[#0a1811] border border-emerald-500/40 p-6 rounded-3xl flex items-center gap-4 shadow-lg shadow-emerald-950/40">
           <div class="w-14 h-14 bg-emerald-800/40 rounded-2xl flex items-center justify-center text-3xl border border-emerald-400/30">🌟</div>
           <div>
-            <span class="text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest block">Craque do Mês</span>
+            <span class="text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest block">Craque da Partida</span>
             <h3 id="craqueName" class="text-2xl font-black text-white">-</h3>
             <p id="craqueScore" class="text-xs text-emerald-300/80 mt-0.5 font-semibold">Média: -</p>
           </div>
@@ -238,7 +256,7 @@
         <div class="bg-gradient-to-br from-rose-950/40 to-[#0a1811] border border-rose-500/30 p-6 rounded-3xl flex items-center gap-4 shadow-lg shadow-rose-950/30">
           <div class="w-14 h-14 bg-rose-900/30 rounded-2xl flex items-center justify-center text-3xl border border-rose-500/20">🐟</div>
           <div>
-            <span class="text-[10px] font-extrabold text-rose-400 uppercase tracking-widest block">Bagre do Mês</span>
+            <span class="text-[10px] font-extrabold text-rose-400 uppercase tracking-widest block">Bagre da Partida</span>
             <h3 id="bagreName" class="text-2xl font-black text-white">-</h3>
             <p id="bagreScore" class="text-xs text-rose-300/80 mt-0.5 font-semibold">Média: -</p>
           </div>
@@ -246,7 +264,7 @@
       </div>
 
       <div class="bg-[#0a1811] rounded-3xl border border-emerald-900/40 p-5">
-        <h4 class="font-extrabold text-white text-xs uppercase tracking-wider mb-3">Classificação Geral Acumulada</h4>
+        <h4 class="font-extrabold text-white text-xs uppercase tracking-wider mb-3">Classificação do Jogo</h4>
         <div id="monthlyRankingList" class="divide-y divide-emerald-950/60 text-sm"></div>
       </div>
     </main>
@@ -391,8 +409,39 @@
     let ratings = [];
     let predictions = [];
 
+    // Cache local dos melhores/piores para compartilhamento
+    let currentCraque = null;
+    let currentBagre = null;
+
     function cleanStr(str) {
       return (str || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    // 1. INTERPOLAÇÃO DINÂMICA DE CORES (0 a 10)
+    // 0 = Vermelho (HSL 0, 85%, 55%)
+    // 5 = Amarelo/Laranja (HSL 50, 90%, 50%)
+    // 10 = Verde Neon (HSL 142, 76%, 50%)
+    function getScoreColor(val) {
+      const score = Math.max(0, Math.min(10, parseFloat(val) || 0));
+      let hue;
+      if (score <= 5) {
+        // Interpola de 0 (vermelho) a 50 (amarelo)
+        hue = (score / 5) * 50;
+      } else {
+        // Interpola de 50 (amarelo) a 142 (verde neon)
+        hue = 50 + ((score - 5) / 5) * 92;
+      }
+      return `hsl(${Math.round(hue)}, 85%, 50%)`;
+    }
+
+    function showToast(text, icon = "✅") {
+      const toast = document.getElementById('toastMessage');
+      document.getElementById('toastText').textContent = text;
+      document.getElementById('toastIcon').textContent = icon;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2500);
     }
 
     async function loadFriendsFromDB() {
@@ -450,25 +499,11 @@
         adminToggleContainer.style.display = isCelao ? 'flex' : 'none';
 
         toggleAdminMode();
-        setupDynamicTableHeaders();
         initApp();
       } else {
         loginScreen.style.display = 'flex';
         appScreen.style.display = 'none';
       }
-    }
-
-    function setupDynamicTableHeaders() {
-      const headerRow = document.getElementById('compareTableHeader');
-      while (headerRow.children.length > 3) {
-        headerRow.removeChild(headerRow.lastChild);
-      }
-      FRIENDS.forEach(friend => {
-        const th = document.createElement('th');
-        th.className = "p-4 text-center font-black text-slate-300 min-w-[120px]";
-        th.textContent = friend;
-        headerRow.appendChild(th);
-      });
     }
 
     function toggleAdminMode() {
@@ -543,7 +578,6 @@
       document.getElementById('modalUserName').value = '';
       await loadFriendsFromDB();
       renderManageUsersList();
-      setupDynamicTableHeaders();
       await loadData();
     }
 
@@ -564,7 +598,6 @@
 
       await loadFriendsFromDB();
       renderManageUsersList();
-      setupDynamicTableHeaders();
       await loadData();
     }
 
@@ -735,23 +768,43 @@
       }
     }
 
+    // Atualiza a nota e a cor dinamicamente durante o arrasto do slider
+    function updateScoreDisplay(playerId, scoreVal) {
+      const valEl = document.getElementById(`val-${playerId}`);
+      const rangeEl = document.getElementById(`range-${playerId}`);
+      const cardEl = document.getElementById(`player-card-${playerId}`);
+      const num = Number(scoreVal).toFixed(1);
+      const color = getScoreColor(num);
+
+      valEl.textContent = num;
+      valEl.style.color = color;
+
+      if (rangeEl) {
+        rangeEl.style.accentColor = color;
+      }
+      if (cardEl) {
+        cardEl.style.borderColor = color.replace(')', ', 0.35)').replace('hsl', 'hsla');
+      }
+    }
+
     function togglePlayedStatus(playerId) {
       const chk = document.getElementById(`chk-${playerId}`);
       const range = document.getElementById(`range-${playerId}`);
       const val = document.getElementById(`val-${playerId}`);
+      const cardEl = document.getElementById(`player-card-${playerId}`);
 
       if (chk.checked) {
         range.disabled = false;
         range.classList.remove('opacity-30', 'cursor-not-allowed');
-        val.textContent = Number(range.value).toFixed(1);
-        val.classList.remove('text-slate-600');
-        val.classList.add('text-emerald-400');
+        updateScoreDisplay(playerId, range.value);
       } else {
         range.disabled = true;
         range.classList.add('opacity-30', 'cursor-not-allowed');
         val.textContent = 'S/N';
-        val.classList.remove('text-emerald-400');
-        val.classList.add('text-slate-600');
+        val.style.color = '#475569'; // slate-600
+        if (cardEl) {
+          cardEl.style.borderColor = 'rgba(6, 78, 59, 0.4)'; // borda padrão esmeralda escuro
+        }
       }
     }
 
@@ -841,9 +894,14 @@
         const hasScore = existing && existing.score !== null && existing.score !== -1;
         const currentScore = hasScore ? existing.score : '6.0';
         const isPlayed = hasScore || !existing;
+        const initialColor = getScoreColor(currentScore);
 
         const card = document.createElement('div');
-        card.className = "bg-[#0a1811] p-4 rounded-2xl border border-emerald-900/40 hover:border-emerald-700/50 flex flex-col justify-between gap-3 transition shadow-sm";
+        card.id = `player-card-${p.id}`;
+        card.className = "bg-[#0a1811] p-4 rounded-2xl border border-emerald-900/40 flex flex-col justify-between gap-3 transition shadow-sm";
+        if (isPlayed) {
+          card.style.borderColor = initialColor.replace(')', ', 0.35)').replace('hsl', 'hsla');
+        }
 
         if (isReadOnly) {
           card.innerHTML = `
@@ -856,7 +914,7 @@
             </div>
             <div class="flex items-center justify-between pt-2 border-t border-emerald-950">
               <span class="text-xs text-slate-400 font-medium">Sua Nota Registrada:</span>
-              <span class="text-2xl font-black text-emerald-400">${Number(currentScore).toFixed(1)}</span>
+              <span class="text-2xl font-black" style="color: ${initialColor};">${Number(currentScore).toFixed(1)}</span>
             </div>
           `;
         } else {
@@ -873,10 +931,11 @@
             </div>
             <div class="flex items-center justify-between gap-3 pt-2 border-t border-emerald-950">
               <input type="range" min="0" max="10" step="0.5" value="${currentScore}" id="range-${p.id}" 
-                     class="w-full accent-emerald-500 cursor-pointer h-2 bg-[#050e09] rounded-lg ${isPlayed ? '' : 'opacity-20 cursor-not-allowed'}" 
+                     class="w-full cursor-pointer h-2 bg-[#050e09] rounded-lg ${isPlayed ? '' : 'opacity-20 cursor-not-allowed'}" 
+                     style="accent-color: ${isPlayed ? initialColor : '#475569'};"
                      ${isPlayed ? '' : 'disabled'}
-                     oninput="document.getElementById('val-${p.id}').textContent = Number(this.value).toFixed(1)">
-              <span id="val-${p.id}" class="text-xl font-black min-w-[2.8rem] text-right ${isPlayed ? 'text-emerald-400' : 'text-slate-600'}">
+                     oninput="updateScoreDisplay('${p.id}', this.value)">
+              <span id="val-${p.id}" class="text-xl font-black min-w-[2.8rem] text-right" style="color: ${isPlayed ? initialColor : '#475569'};">
                 ${isPlayed ? Number(currentScore).toFixed(1) : 'S/N'}
               </span>
             </div>
@@ -920,49 +979,92 @@
       await loadData();
       btn.disabled = false;
       btn.textContent = 'Notas Salvas!';
+      showToast('Suas notas foram salvas!');
       setTimeout(() => { btn.textContent = 'Salvar Minhas Notas'; }, 2000);
     }
 
+    // 2. FILTRAR "NOTAS DA RODADA" APENAS PARA QUEM JÁ VOTOU NESTA PARTIDA
     function renderCompareTable() {
       const curMatch = allMatches.find(m => m.id === currentMatchId);
       const isExpired = isMatchExpired(curMatch);
 
       const userHasVoted = players.some(p => {
-        return ratings.some(r => r.match_player_id === p.id && r.friend_name === currentUser);
+        return ratings.some(r => r.match_player_id === p.id && r.friend_name === currentUser && Number(r.score) >= 0);
       });
 
       const warning = document.getElementById('blindVoteWarning');
       const content = document.getElementById('compareContent');
+      const scrollHint = document.getElementById('compareScrollHint');
 
       if (!userHasVoted && !isExpired) {
         warning.style.display = 'block';
         content.style.display = 'none';
+        if (scrollHint) scrollHint.style.display = 'none';
         return;
       }
 
       warning.style.display = 'none';
       content.style.display = 'block';
+      if (scrollHint) scrollHint.style.display = 'block';
+
+      // Identifica quem dentre todos os amigos votou nessa partida específica
+      const playerIds = players.map(p => p.id);
+      const votersInThisMatch = FRIENDS.filter(friend => {
+        return ratings.some(r => playerIds.includes(r.match_player_id) && r.friend_name === friend && Number(r.score) >= 0);
+      });
+
+      // Reconstrói o cabeçalho dinamicamente apenas com quem votou
+      const headerRow = document.getElementById('compareTableHeader');
+      while (headerRow.children.length > 3) {
+        headerRow.removeChild(headerRow.lastChild);
+      }
+
+      votersInThisMatch.forEach(voter => {
+        const th = document.createElement('th');
+        th.className = "p-4 text-center font-black text-slate-300 min-w-[110px]";
+        th.textContent = voter;
+        headerRow.appendChild(th);
+      });
 
       const tbody = document.getElementById('compareTableBody');
       tbody.innerHTML = '';
+
+      if (votersInThisMatch.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="3" class="p-8 text-center text-slate-400 font-semibold italic">
+              Nenhum amigo avaliou esta partida ainda. Seja o primeiro a registrar suas notas!
+            </td>
+          </tr>
+        `;
+        return;
+      }
 
       players.forEach(p => {
         const validRatings = ratings.filter(r => r.match_player_id === p.id && r.score !== null && Number(r.score) >= 0);
         const avg = validRatings.length ? (validRatings.reduce((sum, r) => sum + Number(r.score), 0) / validRatings.length).toFixed(1) : '-';
 
         let friendCols = '';
-        FRIENDS.forEach(f => {
-          const r = ratings.find(item => item.match_player_id === p.id && item.friend_name === f);
+        votersInThisMatch.forEach(voter => {
+          const r = ratings.find(item => item.match_player_id === p.id && item.friend_name === voter);
           const hasPlayed = r && Number(r.score) >= 0;
           const displayScore = hasPlayed ? Number(r.score).toFixed(1) : (r && Number(r.score) === -1 ? 'S/N' : '-');
-          friendCols += `<td class="p-4 text-center font-mono ${hasPlayed ? 'text-white font-black text-lg' : 'text-slate-600 font-semibold'}">${displayScore}</td>`;
+          const scoreColor = hasPlayed ? getScoreColor(r.score) : '#64748b';
+
+          friendCols += `
+            <td class="p-4 text-center font-mono font-black text-lg" style="color: ${scoreColor};">
+              ${displayScore}
+            </td>
+          `;
         });
+
+        const avgColor = avg !== '-' ? getScoreColor(avg) : '#10b981';
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td class="p-4 font-bold text-white sticky left-0 bg-[#0a1811] z-10 border-r border-emerald-950 shadow-[3px_0_10px_rgba(0,0,0,0.5)]">${p.player_name}</td>
           <td class="p-4 text-emerald-400/80 text-xs font-semibold uppercase">${p.position}</td>
-          <td class="p-4 text-emerald-400 font-black text-lg">${avg}</td>
+          <td class="p-4 font-black text-lg" style="color: ${avgColor};">${avg}</td>
           ${friendCols}
         `;
         tbody.appendChild(tr);
@@ -1043,7 +1145,7 @@
         opponent_goals: parseInt(opponentGoals)
       }, { onConflict: 'match_id,friend_name' });
 
-      alert('Palpite salvo com sucesso!');
+      showToast('Palpite registrado no Bolão!');
       await loadData();
     }
 
@@ -1158,53 +1260,125 @@
       return 0;
     }
 
+    // Calcula Craque & Bagre da partida selecionada
     async function renderRanking() {
-      const { data: allPlayersData } = await db.from('match_players').select('id, player_name, position');
-      const allP = allPlayersData || [];
-
-      const grouped = {};
-      allP.forEach(p => {
-        if (!grouped[p.player_name]) {
-          grouped[p.player_name] = { name: p.player_name, pos: p.position, scores: [] };
-        }
+      const stats = players.map(p => {
         const pRatings = ratings.filter(r => r.match_player_id === p.id && r.score !== null && Number(r.score) >= 0);
-        pRatings.forEach(r => grouped[p.player_name].scores.push(Number(r.score)));
-      });
-
-      const stats = Object.values(grouped).map(item => {
-        const total = item.scores.length;
-        const avg = total > 0 ? (item.scores.reduce((a, b) => a + b, 0) / total) : null;
-        return { name: item.name, pos: item.pos, avg, total };
+        const total = pRatings.length;
+        const avg = total > 0 ? (pRatings.reduce((a, b) => a + Number(b.score), 0) / total) : null;
+        return { name: p.player_name, pos: p.position, avg, total };
       }).filter(item => item.avg !== null);
 
       stats.sort((a, b) => b.avg - a.avg);
 
+      const craqueEl = document.getElementById('craqueName');
+      const craqueScoreEl = document.getElementById('craqueScore');
+      const bagreEl = document.getElementById('bagreName');
+      const bagreScoreEl = document.getElementById('bagreScore');
+
       if (stats.length > 0) {
-        const craque = stats[0];
-        const bagre = stats[stats.length - 1];
+        currentCraque = stats[0];
+        currentBagre = stats[stats.length - 1];
 
-        document.getElementById('craqueName').textContent = craque.name;
-        document.getElementById('craqueScore').textContent = `Média: ${craque.avg.toFixed(1)} (${craque.total} voto(s))`;
+        craqueEl.textContent = currentCraque.name;
+        craqueScoreEl.textContent = `Média: ${currentCraque.avg.toFixed(1)} (${currentCraque.pos})`;
 
-        document.getElementById('bagreName').textContent = bagre.name;
-        document.getElementById('bagreScore').textContent = `Média: ${bagre.avg.toFixed(1)} (${bagre.total} voto(s))`;
+        bagreEl.textContent = currentBagre.name;
+        bagreScoreEl.textContent = `Média: ${currentBagre.avg.toFixed(1)} (${currentBagre.pos})`;
+      } else {
+        currentCraque = null;
+        currentBagre = null;
+        craqueEl.textContent = "-";
+        craqueScoreEl.textContent = "Média: -";
+        bagreEl.textContent = "-";
+        bagreScoreEl.textContent = "Média: -";
       }
 
       const list = document.getElementById('monthlyRankingList');
       list.innerHTML = '';
+
+      if (stats.length === 0) {
+        list.innerHTML = `<div class="text-xs text-slate-500 py-3 italic">Sem avaliações suficientes para ranquear esta partida.</div>`;
+        return;
+      }
+
       stats.forEach((p, idx) => {
         const row = document.createElement('div');
         row.className = "flex justify-between items-center py-2.5";
+        const scoreColor = getScoreColor(p.avg);
+
         row.innerHTML = `
           <div class="flex items-center gap-3">
             <span class="font-mono text-xs font-bold w-5 text-emerald-500">#${idx + 1}</span>
             <span class="font-bold text-white">${p.name}</span>
-            <span class="text-[11px] text-slate-500">${p.pos} • ${p.total} avaliações</span>
+            <span class="text-[11px] text-slate-500">${p.pos} • ${p.total} voto(s)</span>
           </div>
-          <span class="font-mono font-black text-emerald-400 text-base">${p.avg.toFixed(1)}</span>
+          <span class="font-mono font-black text-base" style="color: ${scoreColor};">${p.avg.toFixed(1)}</span>
         `;
         list.appendChild(row);
       });
+    }
+
+    // 3. COMPARTILHAR CRAQUE E BAGRE DA PARTIDA
+    async function shareMatchSummary() {
+      const curMatch = allMatches.find(m => m.id === currentMatchId);
+      if (!curMatch) return alert("Nenhuma partida selecionada.");
+
+      if (!currentCraque && !currentBagre) {
+        return alert("Ainda não há notas registradas nesta partida para gerar o Craque e o Bagre!");
+      }
+
+      const opponent = curMatch.opponent || "Adversário";
+      const competition = curMatch.competition ? ` (${curMatch.competition})` : "";
+      const placar = (curMatch.home_score !== null && curMatch.away_score !== null)
+        ? `${curMatch.home_score}x${curMatch.away_score}`
+        : "A definir";
+
+      const craqueText = currentCraque 
+        ? `${currentCraque.name} (${currentCraque.avg.toFixed(1)})` 
+        : "Sem votos suficientes";
+
+      const bagreText = currentBagre 
+        ? `${currentBagre.name} (${currentBagre.avg.toFixed(1)})` 
+        : "Sem votos suficientes";
+
+      const siteUrl = window.location.origin + window.location.pathname;
+
+      const shareText = 
+`⚽ Palmeiras ${placar} ${opponent}${competition}
+🌟 Craque da partida: ${craqueText}
+🐟 Bagre da partida: ${bagreText}
+
+Confere as notas e dê seus palpites:
+${siteUrl}`;
+
+      // Tenta menu nativo do celular (navigator.share)
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: `Notas do Verdão - Palmeiras vs ${opponent}`,
+            text: shareText
+          });
+          return;
+        } catch (err) {
+          // Se o usuário cancelou o menu de compartilhar, encerra sem alertar erro
+          if (err.name === 'AbortError') return;
+        }
+      }
+
+      // Fallback para Clipboard (desktop ou navegadores sem Web Share API)
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+          await navigator.clipboard.writeText(shareText);
+          showToast("Mensagem copiada para a área de transferência! 📋");
+          return;
+        } catch (err) {
+          console.error("Erro ao copiar para o clipboard:", err);
+        }
+      }
+
+      // Fallback manual (prompt) caso clipboard seja bloqueado
+      prompt("Copie o texto abaixo para compartilhar no grupo:", shareText);
     }
 
     function switchTab(tab) {
@@ -1221,6 +1395,13 @@
           ? "px-4 py-2.5 font-extrabold rounded-2xl bg-emerald-500 text-slate-950 text-xs uppercase tracking-wider shrink-0 transition shadow-md shadow-emerald-950" 
           : "px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 transition border border-emerald-900/30";
       });
+
+      if (tab === 'compare') {
+        renderCompareTable();
+      }
+      if (tab === 'ranking') {
+        renderRanking();
+      }
     }
 
     checkSession();

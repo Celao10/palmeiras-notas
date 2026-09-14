@@ -368,7 +368,8 @@
     let currentCraque = null, currentBagre = null;
 
     // Variáveis Globais de Jogo
-    let dailyChallenge = null;
+    let termoChallenge = null;
+    let pistasChallenge = null;
     let daysSinceStart = 1;
     let todayDateStr = new Date().toLocaleDateString('en-CA'); 
 
@@ -428,14 +429,11 @@
         document.getElementById('adminToggleContainer').style.display = isCelao ? 'flex' : 'none';
         toggleAdminMode();
         
-        // RECUPERADO A FUNÇÃO DE PUXAR OS JOGOS AQUI
         await initApp();
-        
         await loadDailyChallenge();
         await loadGameStates();
         await loadDailyRankings();
         
-        // MUDADO DE 'jogos' PARA 'rate' COMO VOCÊ PEDIU
         switchTab('rate');
       } else {
         loginScreen.style.display = 'flex';
@@ -780,19 +778,29 @@
     /* =========================================================================
        GAMES ENGINE (SUPABASE INTEGRATION)
        ========================================================================= */
+    let termoChallenge = null;
+    let pistasChallenge = null;
+
     async function loadDailyChallenge() {
       const { data } = await db.from('game_challenges').select('*').order('id', { ascending: true });
       if (data && data.length > 0) {
         const start = new Date("2026-09-01").setHours(0,0,0,0), todayMs = new Date().setHours(0,0,0,0);
         daysSinceStart = Math.max(0, Math.floor((todayMs - start) / 86400000));
-        dailyChallenge = data[daysSinceStart % data.length];
+        
+        // Pega o jogador do Termo normalmente
+        termoChallenge = data[daysSinceStart % data.length];
+        
+        // Aplica um "deslocamento" (metade da tabela) para garantir que o Pistas seja sempre outro jogador
+        const offset = Math.floor(data.length / 2);
+        pistasChallenge = data[(daysSinceStart + offset) % data.length];
+
         document.getElementById('termoDayCount').textContent = daysSinceStart + 1;
         document.getElementById('pistasDayCount').textContent = daysSinceStart + 1;
       }
     }
 
     async function loadGameStates() {
-      if (!dailyChallenge) return;
+      if (!termoChallenge || !pistasChallenge) return;
       const { data } = await db.from('game_daily_results').select('*').eq('friend_name', currentUser).eq('play_date', todayDateStr);
       initTermo(data?.find(d => d.game_type === 'termo'));
       initPistas(data?.find(d => d.game_type === 'pistas'));
@@ -809,7 +817,7 @@
     let termoWord, termoLen, termoMaxGuesses = 6, termoGuesses = [], currentTermoGuess = "", termoGameOver = false;
 
     function initTermo(savedData) {
-      termoWord = dailyChallenge.termo_word.toUpperCase(); termoLen = termoWord.length;
+      termoWord = termoChallenge.termo_word.toUpperCase(); termoLen = termoWord.length;
       termoGuesses = savedData?.game_state?.guesses || []; termoGameOver = savedData?.completed || false; currentTermoGuess = "";
 
       const grid = document.getElementById('termoGrid');
@@ -901,7 +909,7 @@
     let pScore = 500, pClueIdx = 0, pGameOver = false, pPlayerName = "";
     
     function initPistas(savedData) {
-      pPlayerName = dailyChallenge.player_name; pScore = savedData?.score ?? 500; pClueIdx = savedData?.game_state?.clueIndex ?? 0; pGameOver = savedData?.completed ?? false;
+      pPlayerName = pistasChallenge.player_name; pScore = savedData?.score ?? 500; pClueIdx = savedData?.game_state?.clueIndex ?? 0; pGameOver = savedData?.completed ?? false;
       document.getElementById('cluesContainer').innerHTML = ''; document.getElementById('currentPistasScore').textContent = `${pScore} pts`;
       const cluesToRender = pClueIdx === 0 ? 1 : pClueIdx; pClueIdx = 0; 
       for(let i=0; i<cluesToRender; i++) renderClueUI();
@@ -917,7 +925,7 @@
     function renderClueUI() {
       if(pClueIdx >= 5) return;
       const titles = ["Pista 1: Carreira", "Pista 2: Perfil", "Pista 3: Títulos", "Pista 4: Período", "Pista 5: Curiosidade"];
-      const texts = [dailyChallenge.clue_career, dailyChallenge.clue_profile, dailyChallenge.clue_titles, dailyChallenge.clue_period, dailyChallenge.clue_trivia];
+      const texts = [pistasChallenge.clue_career, pistasChallenge.clue_profile, pistasChallenge.clue_titles, pistasChallenge.clue_period, pistasChallenge.clue_trivia];
       const div = document.createElement('div'); div.className = "bg-[#05110a] p-4 rounded-2xl border border-emerald-900/60 shadow-sm animate-[popIn_0.3s_ease]";
       div.innerHTML = `<span class="text-[10px] uppercase font-black tracking-widest text-emerald-500 block mb-1">${titles[pClueIdx]}</span><p class="text-sm font-bold text-slate-200 leading-snug">${texts[pClueIdx]}</p>`;
       document.getElementById('cluesContainer').appendChild(div);

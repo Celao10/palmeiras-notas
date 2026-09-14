@@ -2,15 +2,15 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Notas do Verdão & Resenha</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Notas do Verdão</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; touch-action: manipulation; }
     ::-webkit-scrollbar { height: 8px; width: 6px; }
     ::-webkit-scrollbar-track { background: #061811; }
     ::-webkit-scrollbar-thumb { background: #15803d; border-radius: 4px; }
@@ -18,17 +18,16 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
-    /* Animações do Termo */
     @keyframes popIn {
       0% { transform: scale(0.8); opacity: 0; }
       40% { transform: scale(1.1); opacity: 1; }
       100% { transform: scale(1); opacity: 1; }
     }
     .tile-pop { animation: popIn 0.15s ease forwards; }
-    .tile-flip { transition: transform 0.5s, background-color 0.5s, border-color 0.5s; }
+    .tile-flip { transition: transform 0.5s, background-color 0.5s, border-color 0.5s, color 0.5s; }
   </style>
 </head>
-<body class="bg-[#08120d] text-slate-100 min-h-screen p-3 md:p-6 selection:bg-emerald-500 selection:text-white relative overflow-x-hidden">
+<body class="bg-[#08120d] text-slate-100 min-h-screen p-2 md:p-6 selection:bg-emerald-500 selection:text-white relative overflow-x-hidden">
 
   <!-- MARCA D'ÁGUA CLEAN DE FUNDO -->
   <div class="fixed inset-0 pointer-events-none z-0 flex items-center justify-center overflow-hidden">
@@ -37,21 +36,15 @@
          class="w-[320px] md:w-[600px] opacity-[0.035] select-none filter invert contrast-200 pointer-events-none">
   </div>
 
-  <!-- TOAST NOTIFICATION -->
   <div id="toastMessage" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-emerald-500 text-slate-950 font-black px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2 text-sm border border-emerald-300">
     <span id="toastIcon">✅</span>
     <span id="toastText">Copiado com sucesso!</span>
   </div>
 
   <!-- TELA DE LOGIN -->
-  <div id="loginScreen" style="display: flex;" class="min-h-[85vh] items-center justify-center relative z-10">
+  <div id="loginScreen" style="display: flex;" class="min-h-[85vh] items-center justify-center relative z-10 p-2">
     <div class="bg-gradient-to-b from-[#0e2419] to-[#0a1811] p-8 md:p-10 rounded-3xl border border-emerald-500/30 shadow-[0_20px_50px_rgba(0,0,0,0.8)] max-w-sm w-full text-center space-y-6 relative overflow-hidden backdrop-blur-xl">
-      <div class="absolute -top-20 -left-20 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute -bottom-20 -right-20 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-      <div class="w-20 h-20 bg-gradient-to-tr from-emerald-800 to-emerald-600 border-2 border-emerald-400/40 rounded-3xl flex items-center justify-center mx-auto text-4xl shadow-lg shadow-emerald-950/80">
-        🐷
-      </div>
+      <div class="w-20 h-20 bg-gradient-to-tr from-emerald-800 to-emerald-600 border-2 border-emerald-400/40 rounded-3xl flex items-center justify-center mx-auto text-4xl shadow-lg">🐷</div>
       <div>
         <h2 class="text-2xl font-black tracking-tight text-white uppercase">Notas do Verdão</h2>
         <p class="text-emerald-400/80 text-xs font-semibold tracking-wider uppercase mt-1">Painel da Torcida</p>
@@ -60,7 +53,7 @@
         <input id="loginInput" type="text" placeholder="Seu nome ou apelido..." 
                class="w-full bg-[#050e09] border border-emerald-900/80 focus:border-emerald-400 rounded-2xl px-4 py-3.5 text-center text-lg font-bold text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition">
         <p id="loginError" style="display: none;" class="text-rose-400 text-xs font-semibold"></p>
-        <button id="btnLogin" onclick="handleLogin()" class="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 font-extrabold text-sm uppercase tracking-wider text-white rounded-2xl shadow-lg shadow-emerald-900/50 transition duration-200">
+        <button id="btnLogin" onclick="handleLogin()" class="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 font-extrabold text-sm uppercase tracking-wider text-white rounded-2xl shadow-lg shadow-emerald-900/50 transition">
           Entrar na Resenha
         </button>
       </div>
@@ -68,288 +61,422 @@
   </div>
 
   <!-- APLICAÇÃO PRINCIPAL -->
-  <div id="appScreen" style="display: none;" class="max-w-4xl mx-auto space-y-5 relative z-10">
+  <div id="appScreen" style="display: none;" class="max-w-4xl mx-auto space-y-4 md:space-y-5 relative z-10">
     
     <!-- HEADER -->
     <header class="bg-gradient-to-b from-[#0e251a] to-[#081710] p-4 md:p-5 rounded-3xl shadow-lg border border-emerald-500/20 space-y-3">
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-2.5">
           <span class="text-2xl">🐷</span>
-          <h1 class="text-lg md:text-2xl font-black tracking-tight text-white uppercase">
-            Notas do Verdão
-          </h1>
+          <h1 class="text-lg md:text-2xl font-black tracking-tight text-white uppercase">Notas do Verdão</h1>
         </div>
         <div class="flex items-center gap-2">
           <div class="bg-[#05110a] px-3 py-1 rounded-xl border border-emerald-900/60 flex items-center gap-2">
             <span class="text-xs font-black text-white" id="loggedUserDisplay"></span>
           </div>
-          <button onclick="logout()" class="text-[11px] bg-rose-500/10 hover:bg-rose-500/25 text-rose-300 px-2.5 py-1 rounded-xl border border-rose-500/20 font-bold transition">
-            Sair
-          </button>
+          <button onclick="logout()" class="text-[11px] bg-rose-500/10 hover:bg-rose-500/25 text-rose-300 px-2.5 py-1 rounded-xl border border-rose-500/20 font-bold transition">Sair</button>
+        </div>
+      </div>
+      <div class="w-full">
+        <select id="matchSelect" onchange="onSelectMatch()" class="w-full bg-[#05110a] text-emerald-100 font-bold text-xs md:text-sm border border-emerald-800/80 rounded-2xl px-3.5 py-2.5 focus:outline-none focus:border-emerald-400 cursor-pointer shadow-inner"></select>
+      </div>
+      <div id="adminToggleContainer" style="display: none;" class="pt-2 border-t border-emerald-950/70 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2 bg-[#05110a] px-2.5 py-1 rounded-xl border border-emerald-900/50">
+          <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Admin</span>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="adminSwitch" onchange="toggleAdminMode()" class="sr-only peer">
+            <div class="w-7 h-4 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-500"></div>
+          </label>
+        </div>
+        <div id="adminActionGroup" style="display: none;" class="flex items-center gap-1.5 overflow-x-auto">
+          <button onclick="openNewMatchModal()" class="bg-emerald-400 text-slate-950 font-black text-[11px] uppercase tracking-wider px-2.5 py-1.5 rounded-lg shrink-0 shadow-sm">+ Jogo</button>
+          <button onclick="openScoreModal()" class="bg-amber-400 text-slate-950 font-black text-[11px] uppercase tracking-wider px-2.5 py-1.5 rounded-lg shrink-0 shadow-sm">Placar</button>
+          <button onclick="openManageUsersModal()" class="bg-sky-400 text-slate-950 font-black text-[11px] uppercase tracking-wider px-2.5 py-1.5 rounded-lg shrink-0 shadow-sm">Amigos</button>
         </div>
       </div>
     </header>
 
     <!-- NAVEGAÇÃO DE ABAS -->
     <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-      <button id="tabRate" onclick="switchTab('rate')" class="px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 transition border border-emerald-900/30">
-        Avaliar Partida
-      </button>
-      <button id="tabCompare" onclick="switchTab('compare')" class="px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 transition border border-emerald-900/30">
-        Notas da Rodada
-      </button>
-      <button id="tabBolao" onclick="switchTab('bolao')" class="px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 transition border border-emerald-900/30">
-        ⚽ Bolão
-      </button>
-      <button id="tabRanking" onclick="switchTab('ranking')" class="px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 transition border border-emerald-900/30">
-        🏆 Craques
-      </button>
-      <!-- NOVA ABA: JOGOS -->
-      <button id="tabJogos" onclick="switchTab('jogos')" class="px-4 py-2.5 font-extrabold rounded-2xl bg-emerald-500 text-slate-950 text-xs uppercase tracking-wider shrink-0 transition shadow-md shadow-emerald-950">
-        🎮 Resenha & Jogos
-      </button>
+      <button id="tabRate" onclick="switchTab('rate')" class="px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 transition border border-emerald-900/30">Avaliar Partida</button>
+      <button id="tabCompare" onclick="switchTab('compare')" class="px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 transition border border-emerald-900/30">Notas da Rodada</button>
+      <button id="tabBolao" onclick="switchTab('bolao')" class="px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 transition border border-emerald-900/30">⚽ Bolão</button>
+      <button id="tabRanking" onclick="switchTab('ranking')" class="px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 transition border border-emerald-900/30">🏆 Craques</button>
+      <button id="tabJogos" onclick="switchTab('jogos')" class="px-4 py-2.5 font-extrabold rounded-2xl bg-emerald-500 text-slate-950 text-xs uppercase tracking-wider shrink-0 transition shadow-md shadow-emerald-950">🎮 Resenha & Jogos</button>
     </div>
 
-    <!-- Abas de Avaliação, Comparativo, etc... Ocultas para focar nos jogos no protótipo -->
-    <main id="viewRate" style="display: none;"><div class="bg-[#0a1811] p-8 text-center rounded-3xl border border-emerald-900/40 text-slate-400">Aba de Avaliação Oculta no Protótipo</div></main>
-    <main id="viewCompare" style="display: none;"><div class="bg-[#0a1811] p-8 text-center rounded-3xl border border-emerald-900/40 text-slate-400">Aba de Comparativo Oculta no Protótipo</div></main>
-    <main id="viewBolao" style="display: none;"><div class="bg-[#0a1811] p-8 text-center rounded-3xl border border-emerald-900/40 text-slate-400">Aba de Bolão Oculta no Protótipo</div></main>
-    <main id="viewRanking" style="display: none;"><div class="bg-[#0a1811] p-8 text-center rounded-3xl border border-emerald-900/40 text-slate-400">Aba de Craques Oculta no Protótipo</div></main>
+    <!-- ABAS PRINCIPAIS -->
+    <main id="viewRate" class="space-y-4" style="display: none;">
+      <div id="rateLockWarning" style="display: none;" class="border rounded-3xl p-8 text-center space-y-3 bg-[#0a1811]">
+        <div id="rateLockIcon" class="text-4xl">⏳</div>
+        <h3 id="rateLockTitle" class="text-xl font-black"></h3>
+        <p id="rateLockMessage" class="text-sm text-slate-300 max-w-md mx-auto"></p>
+        <button id="rateLockBtn" onclick="switchTab('bolao')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider transition">Ver Bolão</button>
+      </div>
+      <div id="rateReadOnlyInfo" style="display: none;" class="bg-emerald-950/40 border border-emerald-500/30 rounded-2xl p-3 text-center text-xs text-emerald-300 font-semibold">🔒 Janela de avaliação encerrada.</div>
+      <div id="rateContent" class="space-y-4">
+        <div id="playersList" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        <button id="btnSave" onclick="saveRatings()" class="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 font-black text-sm uppercase tracking-widest text-white rounded-2xl shadow-xl transition">Salvar Minhas Notas</button>
+      </div>
+    </main>
 
-    <!-- ABA 5: RESENHA & JOGOS (Fliperama do Verdão) -->
+    <main id="viewCompare" style="display: none;">
+      <div id="blindVoteWarning" style="display: none;" class="bg-amber-500/10 border border-amber-500/30 rounded-3xl p-8 text-center space-y-3">
+        <div class="text-4xl">🙈</div>
+        <h3 class="text-xl font-black text-amber-300">Votação Cega!</h3>
+        <p class="text-sm text-slate-300 max-w-md mx-auto">Salve suas notas primeiro para ver a dos outros.</p>
+        <button onclick="switchTab('rate')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition">Avaliar</button>
+      </div>
+      <div id="compareContent" class="overflow-x-auto bg-[#0a1811] rounded-3xl border border-emerald-900/40 shadow-xl">
+        <table class="w-full text-left border-collapse min-w-[700px]">
+          <thead>
+            <tr id="compareTableHeader" class="bg-[#05110a] text-slate-400 text-[11px] uppercase font-extrabold tracking-wider border-b border-emerald-900/40">
+              <th class="p-4 sticky left-0 bg-[#07140c] z-20 min-w-[170px] shadow-[3px_0_10px_rgba(0,0,0,0.5)]">Atleta</th>
+              <th class="p-4 min-w-[100px]">Posição</th>
+              <th class="p-4 text-emerald-400 font-black min-w-[90px]">Média</th>
+            </tr>
+          </thead>
+          <tbody id="compareTableBody" class="divide-y divide-emerald-950/60 text-sm"></tbody>
+        </table>
+      </div>
+    </main>
+
+    <main id="viewBolao" style="display: none;" class="space-y-5">
+      <div class="bg-gradient-to-b from-[#0e2419] to-[#0a1811] p-6 rounded-3xl border border-emerald-500/20 shadow-lg space-y-4">
+        <div class="flex justify-between gap-2">
+          <div><h3 class="text-base font-black text-white uppercase tracking-wider">Seu Palpite</h3><span id="bolaoMatchTitle" class="text-xs text-emerald-400 font-semibold block mt-0.5"></span></div>
+          <span id="bolaoLockBadge" class="text-xs font-bold px-3 py-1 rounded-full w-fit h-fit"></span>
+        </div>
+        <div class="flex items-center justify-center gap-4 py-2">
+          <div class="text-center">
+            <span class="block font-bold text-xs text-slate-400 uppercase tracking-wider mb-1.5">Palmeiras</span>
+            <input id="inputPredPalmeiras" type="number" min="0" max="20" class="w-16 h-14 bg-[#050e09] border border-emerald-900/80 rounded-2xl text-center text-3xl font-black text-white focus:outline-none focus:border-emerald-400">
+          </div>
+          <span class="text-2xl font-black text-emerald-600/60 mt-5">✕</span>
+          <div class="text-center">
+            <span id="bolaoOpponentName" class="block font-bold text-xs text-slate-400 uppercase tracking-wider mb-1.5">Adversário</span>
+            <input id="inputPredOpponent" type="number" min="0" max="20" class="w-16 h-14 bg-[#050e09] border border-emerald-900/80 rounded-2xl text-center text-3xl font-black text-white focus:outline-none focus:border-emerald-400">
+          </div>
+        </div>
+        <button id="btnSavePrediction" onclick="savePrediction()" class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-500 font-extrabold text-xs uppercase tracking-wider text-white rounded-xl shadow-md transition">Confirmar Palpite</button>
+        <p id="bolaoLockText" style="display: none;" class="text-xs text-center text-rose-400 font-semibold">🔒 Palpites encerrados!</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div class="bg-[#0a1811] rounded-3xl border border-emerald-900/40 p-5 space-y-3">
+          <h4 class="font-extrabold text-white text-xs uppercase tracking-wider">Palpites Registrados</h4>
+          <div id="matchPredictionsList" class="divide-y divide-emerald-950/60 text-sm"></div>
+        </div>
+        <div class="bg-[#0a1811] rounded-3xl border border-emerald-900/40 p-5 space-y-3">
+          <div class="flex items-center justify-between"><h4 class="font-extrabold text-white text-xs uppercase tracking-wider">Top 5</h4><span class="text-[10px] text-emerald-400/80 font-bold uppercase">2 pts / 1 pt</span></div>
+          <div id="bolaoRankingList" class="divide-y divide-emerald-950/60 text-sm"></div>
+        </div>
+      </div>
+    </main>
+
+    <main id="viewRanking" style="display: none;" class="space-y-5">
+      <div class="flex justify-between items-center bg-[#0a1811] p-4 rounded-3xl border border-emerald-900/40">
+        <div><h4 class="font-black text-sm uppercase tracking-wider text-white">Resumo da Partida</h4></div>
+        <button onclick="shareMatchSummary()" class="px-5 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-slate-950 font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg flex items-center gap-2"><span>📲</span> Zap</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-gradient-to-br from-emerald-900/50 to-[#0a1811] border border-emerald-500/40 p-6 rounded-3xl flex items-center gap-4">
+          <div class="w-14 h-14 bg-emerald-800/40 rounded-2xl flex items-center justify-center text-3xl">🌟</div>
+          <div><span class="text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest block">Craque da Partida</span><h3 id="craqueName" class="text-2xl font-black text-white">-</h3><p id="craqueScore" class="text-xs text-emerald-300/80 font-semibold">Média: -</p></div>
+        </div>
+        <div class="bg-gradient-to-br from-rose-950/40 to-[#0a1811] border border-rose-500/30 p-6 rounded-3xl flex items-center gap-4">
+          <div class="w-14 h-14 bg-rose-900/30 rounded-2xl flex items-center justify-center text-3xl">🐟</div>
+          <div><span class="text-[10px] font-extrabold text-rose-400 uppercase tracking-widest block">Bagre da Partida</span><h3 id="bagreName" class="text-2xl font-black text-white">-</h3><p id="bagreScore" class="text-xs text-rose-300/80 font-semibold">Média: -</p></div>
+        </div>
+      </div>
+      <div class="bg-[#0a1811] rounded-3xl border border-emerald-900/40 p-5">
+        <h4 class="font-extrabold text-white text-xs uppercase tracking-wider mb-3">Classificação do Jogo</h4>
+        <div id="monthlyRankingList" class="divide-y divide-emerald-950/60 text-sm"></div>
+      </div>
+    </main>
+
+    <!-- ABA 5: RESENHA & JOGOS -->
     <main id="viewJogos" class="space-y-6">
-      
-      <!-- Toggle de Jogo -->
       <div class="flex p-1 bg-[#050e09] rounded-2xl border border-emerald-900/60 w-fit mx-auto shadow-inner">
-        <button id="btnGameTermo" onclick="setGameMode('termo')" class="px-6 py-2 text-xs font-black uppercase tracking-wider rounded-xl bg-emerald-600 text-white transition shadow-sm">
-          Termo Alviverde
-        </button>
-        <button id="btnGamePistas" onclick="setGameMode('pistas')" class="px-6 py-2 text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:text-slate-200 transition">
-          Quem é o Jogador?
-        </button>
+        <button id="btnGameTermo" onclick="setGameMode('termo')" class="px-5 py-2 text-[11px] md:text-xs font-black uppercase tracking-wider rounded-xl bg-emerald-600 text-white shadow-sm">Termo Alviverde</button>
+        <button id="btnGamePistas" onclick="setGameMode('pistas')" class="px-5 py-2 text-[11px] md:text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:text-slate-200">Quem é o Jogador?</button>
       </div>
 
       <!-- JOGO 1: TERMO ALVIVERDE -->
       <div id="gameTermoContainer" class="max-w-md mx-auto space-y-6">
         <div class="text-center space-y-1">
-          <h3 class="text-2xl font-black text-white uppercase tracking-tight">Termo do Verdão</h3>
-          <p class="text-xs text-emerald-400/80 font-semibold uppercase tracking-widest">Desafio Diário #<span id="termoDayCount">1</span></p>
+          <h3 class="text-xl font-black text-white uppercase tracking-tight">Termo do Verdão</h3>
+          <p class="text-[10px] text-emerald-400/80 font-semibold uppercase tracking-widest">Desafio Diário #<span id="termoDayCount">1</span></p>
         </div>
 
-        <!-- Grade Dinâmica -->
-        <div class="flex justify-center">
-          <div id="termoGrid" class="grid gap-2" style="grid-template-columns: repeat(5, minmax(0, 1fr));">
-            <!-- Os quadrados (tiles) serão gerados via JS -->
-          </div>
+        <div class="flex justify-center px-2">
+          <div id="termoGrid" class="grid gap-1.5 md:gap-2"></div>
         </div>
 
         <div id="termoResult" style="display: none;" class="bg-emerald-950/40 border border-emerald-500/30 p-4 rounded-2xl text-center space-y-3">
           <h4 id="termoResultTitle" class="text-lg font-black text-white"></h4>
-          <button onclick="shareTermo()" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg flex items-center justify-center gap-2 w-full transition">
-            <span>📲</span> Compartilhar Resultado
+          <button onclick="shareTermoToWhatsApp()" class="px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg flex items-center justify-center gap-2 w-full transition">
+            <span>📲</span> Compartilhar no Zap
           </button>
         </div>
 
-        <!-- Teclado Virtual -->
-        <div id="termoKeyboard" class="space-y-2 select-none touch-manipulation">
-          <!-- Teclas geradas via JS -->
-        </div>
+        <!-- TECLADO MOBILE OTIMIZADO -->
+        <div id="termoKeyboard" class="space-y-1.5 select-none touch-manipulation px-1"></div>
       </div>
 
       <!-- JOGO 2: QUEM É O JOGADOR? -->
       <div id="gamePistasContainer" style="display: none;" class="max-w-lg mx-auto space-y-5">
         <div class="text-center space-y-1">
-          <h3 class="text-2xl font-black text-white uppercase tracking-tight">Quem é o Jogador?</h3>
-          <p class="text-xs text-emerald-400/80 font-semibold uppercase tracking-widest">Desafio Diário #<span id="pistasDayCount">1</span></p>
+          <h3 class="text-xl font-black text-white uppercase tracking-tight">Quem é o Jogador?</h3>
+          <p class="text-[10px] text-emerald-400/80 font-semibold uppercase tracking-widest">Desafio Diário #<span id="pistasDayCount">1</span></p>
         </div>
 
-        <!-- Placar e Progresso -->
         <div class="bg-[#050e09] border border-emerald-900/60 p-4 rounded-2xl flex items-center justify-between shadow-inner">
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pontuação em Jogo:</span>
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pontuação Atual:</span>
           <span id="currentPistasScore" class="text-2xl font-black text-emerald-400">500 pts</span>
         </div>
 
-        <!-- Container de Pistas -->
-        <div class="space-y-3" id="cluesContainer">
-          <!-- Pistas injetadas aqui -->
-        </div>
+        <div class="space-y-3" id="cluesContainer"></div>
 
-        <button id="btnRevealClue" onclick="revealNextClue()" class="w-full py-3.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 font-bold text-xs uppercase tracking-wider text-slate-300 rounded-xl transition">
-          👀 Revelar próxima pista (Custa 100 pts)
+        <button id="btnRevealClue" onclick="revealNextClue(true)" class="w-full py-3.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 font-bold text-[11px] uppercase tracking-wider text-slate-300 rounded-xl transition">
+          👀 Revelar próxima pista (-100 pts)
         </button>
 
-        <!-- Área de Resposta -->
         <div id="pistasInputArea" class="pt-4 border-t border-emerald-950 space-y-3">
-          <label class="text-xs text-slate-400 font-bold uppercase tracking-wider block">Já sabe quem é?</label>
+          <label class="text-xs text-slate-400 font-bold uppercase tracking-wider block">Sabe quem é?</label>
           <div class="flex gap-2">
-            <input id="inputPistaGuess" type="text" placeholder="Nome ou apelido do jogador..." 
-                   class="w-full bg-[#050e09] border border-emerald-900/80 rounded-xl px-4 py-3 text-white font-bold focus:border-emerald-400 focus:outline-none placeholder:text-slate-600">
-            <button onclick="guessPista()" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 font-black rounded-xl text-white text-xs uppercase tracking-wider transition shrink-0">
-              Chutar
-            </button>
+            <input id="inputPistaGuess" type="text" placeholder="Nome do jogador..." class="w-full bg-[#050e09] border border-emerald-900/80 rounded-xl px-4 py-3 text-white font-bold focus:border-emerald-400 focus:outline-none">
+            <button onclick="guessPista()" class="px-5 py-3 bg-emerald-600 font-black rounded-xl text-white text-xs uppercase tracking-wider shrink-0">Chutar</button>
           </div>
         </div>
 
-        <!-- Resultado Final das Pistas -->
-        <div id="pistasResult" style="display: none;" class="bg-gradient-to-br from-emerald-900/50 to-[#0a1811] border border-emerald-500/30 p-6 rounded-3xl text-center space-y-3 shadow-lg shadow-emerald-950/40">
+        <div id="pistasResult" style="display: none;" class="bg-gradient-to-br from-emerald-900/50 to-[#0a1811] border border-emerald-500/30 p-6 rounded-3xl text-center space-y-3 shadow-lg">
           <div class="text-4xl" id="pistasResultIcon">✅</div>
           <h4 id="pistasResultTitle" class="text-xl font-black text-white"></h4>
           <p id="pistasResultDesc" class="text-sm text-emerald-200 font-medium"></p>
-          <button onclick="sharePistas()" class="mt-2 px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg w-full transition">
-            📲 Compartilhar Pontuação
-          </button>
+          <button onclick="sharePistasToWhatsApp()" class="mt-2 px-5 py-3 bg-emerald-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg w-full">📲 Compartilhar no Zap</button>
         </div>
-
       </div>
-
+      
+      <!-- RANKING DO DIA (JOGOS) -->
+      <div class="pt-6 mt-6 border-t border-emerald-950">
+        <h3 class="text-center font-black text-white uppercase tracking-wider mb-4">🏆 Melhores de Hoje</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-[#0a1811] rounded-3xl border border-emerald-900/40 p-4">
+            <h4 class="font-extrabold text-emerald-400 text-[10px] uppercase tracking-widest text-center mb-3">Termo Alviverde</h4>
+            <div id="rankingTermoList" class="divide-y divide-emerald-950/60 text-sm"></div>
+          </div>
+          <div class="bg-[#0a1811] rounded-3xl border border-emerald-900/40 p-4">
+            <h4 class="font-extrabold text-emerald-400 text-[10px] uppercase tracking-widest text-center mb-3">Quem é o Jogador?</h4>
+            <div id="rankingPistasList" class="divide-y divide-emerald-950/60 text-sm"></div>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 
+  <!-- Modais Ocultos do App Principal -->
+  <div id="newMatchModal" style="display: none;" class="fixed inset-0 bg-black/85 items-center justify-center p-4 z-50"></div>
+  <div id="scoreModal" style="display: none;" class="fixed inset-0 bg-black/85 items-center justify-center p-4 z-50"></div>
+  <div id="manageUsersModal" style="display: none;" class="fixed inset-0 bg-black/85 items-center justify-center p-4 z-50"></div>
+
   <script>
+    const SUPABASE_URL = "https://exkurcyjralifdgdmdjt.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_kP5nMFx8P0OmrV0gocZqEg_0ZXI56r1";
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let FRIENDS = ["Celão", "Danão", "Bona", "Gabão", "Calango", "Benga", "Lele", "Gabo"];
+    let currentUser = localStorage.getItem('palmeiras_user') || null;
+    let allMatches = [], currentMatchId = null, players = [], ratings = [], predictions = [];
+    let currentCraque = null, currentBagre = null;
+
+    // Variáveis Globais de Jogo
+    let dailyChallenge = null;
+    let daysSinceStart = 1;
+    let todayDateStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
+
     /* =========================================================================
-       LABORATÓRIO: BANCO DE DADOS MOCK PARA OS JOGOS DIÁRIOS
+       CORE E INICIALIZAÇÃO
        ========================================================================= */
-    // Essa lista simula o retorno do Supabase. Adicionei palavras com tamanhos
-    // diferentes para testarmos a grade dinâmica do Termo.
-    const DAILY_CHALLENGES = [
-      {
-        termo: "GOMEZ",
-        jogador: {
-          nome: "Gustavo Gómez",
-          pistas: [
-            "Libertad ➔ Lanús ➔ Milan ➔ Palmeiras",
-            "Zagueiro central | Paraguaio | Especialista no jogo aéreo",
-            "Bi da Libertadores, Tri do Brasileirão, Bi da Copa do Brasil",
-            "Chegou em 2018 e está no clube até hoje.",
-            "Capitão estrangeiro com mais títulos na história do Palmeiras."
-          ]
-        }
-      },
-      {
-        termo: "WEVERTON",
-        jogador: {
-          nome: "Weverton",
-          pistas: [
-            "Corinthians ➔ Portuguesa ➔ Athletico-PR ➔ Palmeiras",
-            "Goleiro | Destro | Frio e seguro",
-            "Bi da Libertadores, Tri do Brasileirão, Bi da Copa do Brasil",
-            "Chegou em 2018 e herdou a mítica camisa 21.",
-            "Herói olímpico que defendeu pênalti na final no Maracanã pela Seleção."
-          ]
-        }
-      },
-      {
-        termo: "DUDU",
-        jogador: {
-          nome: "Dudu",
-          pistas: [
-            "Cruzeiro ➔ Coritiba ➔ Dínamo Kiev ➔ Grêmio ➔ Palmeiras",
-            "Atacante | Destro | Baixinho, liso, joga pelas pontas",
-            "Tetra do Brasileirão, Bi da Libertadores",
-            "Chegou em 2015 com o famoso chapéu nos rivais.",
-            "O maior ídolo da atual geração e dono da camisa 7."
-          ]
-        }
+    function cleanStr(str) { return (str || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+    function getScoreColor(val) {
+      const s = Math.max(0, Math.min(10, parseFloat(val) || 0));
+      const hue = s <= 5 ? (s/5)*50 : 50+((s-5)/5)*92;
+      return `hsl(${Math.round(hue)}, 85%, 50%)`;
+    }
+    function showToast(text, icon = "✅") {
+      const toast = document.getElementById('toastMessage');
+      document.getElementById('toastText').textContent = text;
+      document.getElementById('toastIcon').textContent = icon;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2500);
+    }
+
+    async function loadFriendsFromDB() {
+      const { data } = await db.from('app_users').select('name').order('created_at', { ascending: true });
+      if (data && data.length > 0) FRIENDS = data.map(u => u.name);
+    }
+
+    async function handleLogin() {
+      await loadFriendsFromDB();
+      const input = document.getElementById('loginInput').value;
+      const match = FRIENDS.find(f => cleanStr(f) === cleanStr(input));
+      if (match) {
+        currentUser = match;
+        localStorage.setItem('palmeiras_user', currentUser);
+        document.getElementById('loginError').style.display = 'none';
+        checkSession();
+      } else {
+        document.getElementById('loginError').textContent = `Nome não autorizado. Use: ${FRIENDS.join(', ')}.`;
+        document.getElementById('loginError').style.display = 'block';
       }
-    ];
+    }
+    document.getElementById('loginInput').addEventListener('keyup', e => { if (e.key === 'Enter') handleLogin(); });
 
-    // Lógica determinística: todo celular do mundo pega o mesmo desafio no mesmo dia.
-    const startDate = new Date("2026-09-01").setHours(0,0,0,0);
-    const today = new Date().setHours(0,0,0,0);
-    const daysSinceStart = Math.max(0, Math.floor((today - startDate) / 86400000));
-    const challengeIndex = daysSinceStart % DAILY_CHALLENGES.length;
-    const TODAY_DATA = DAILY_CHALLENGES[challengeIndex];
+    function logout() {
+      localStorage.removeItem('palmeiras_user');
+      currentUser = null;
+      document.getElementById('loginInput').value = '';
+      checkSession();
+    }
 
-    document.getElementById('termoDayCount').textContent = daysSinceStart + 1;
-    document.getElementById('pistasDayCount').textContent = daysSinceStart + 1;
-
-    // Login Fake Rápido para Teste
-    let currentUser = "Teste"; 
+    async function checkSession() {
+      await loadFriendsFromDB();
+      const loginScreen = document.getElementById('loginScreen');
+      const appScreen = document.getElementById('appScreen');
+      
+      if (currentUser) {
+        loginScreen.style.display = 'none';
+        appScreen.style.display = 'block';
+        document.getElementById('loggedUserDisplay').textContent = currentUser;
+        
+        const isCelao = cleanStr(currentUser) === 'celao';
+        document.getElementById('adminToggleContainer').style.display = isCelao ? 'flex' : 'none';
+        
+        await loadDailyChallenge();
+        await loadGameStates();
+        await loadDailyRankings();
+        
+        switchTab('jogos'); // Forçando aba de jogos no carregamento para você testar
+      } else {
+        loginScreen.style.display = 'flex';
+        appScreen.style.display = 'none';
+      }
+    }
 
     function switchTab(tab) {
-      document.getElementById('viewRate').style.display = tab === 'rate' ? 'block' : 'none';
-      document.getElementById('viewCompare').style.display = tab === 'compare' ? 'block' : 'none';
-      document.getElementById('viewBolao').style.display = tab === 'bolao' ? 'block' : 'none';
-      document.getElementById('viewRanking').style.display = tab === 'ranking' ? 'block' : 'none';
-      document.getElementById('viewJogos').style.display = tab === 'jogos' ? 'block' : 'none';
-
       ['rate', 'compare', 'bolao', 'ranking', 'jogos'].forEach(t => {
-        const isSelected = t === tab;
+        document.getElementById(`view${t.charAt(0).toUpperCase() + t.slice(1)}`).style.display = t === tab ? 'block' : 'none';
         const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
-        btn.className = isSelected 
-          ? "px-4 py-2.5 font-extrabold rounded-2xl bg-emerald-500 text-slate-950 text-xs uppercase tracking-wider shrink-0 transition shadow-md shadow-emerald-950" 
-          : "px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 transition border border-emerald-900/30";
+        btn.className = t === tab 
+          ? "px-4 py-2.5 font-extrabold rounded-2xl bg-emerald-500 text-slate-950 text-xs uppercase tracking-wider shrink-0 shadow-md shadow-emerald-950" 
+          : "px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 border border-emerald-900/30";
       });
     }
 
     function setGameMode(mode) {
       document.getElementById('gameTermoContainer').style.display = mode === 'termo' ? 'block' : 'none';
       document.getElementById('gamePistasContainer').style.display = mode === 'pistas' ? 'block' : 'none';
-
-      const btnTermo = document.getElementById('btnGameTermo');
-      const btnPistas = document.getElementById('btnGamePistas');
-
-      if (mode === 'termo') {
-        btnTermo.className = "px-6 py-2 text-xs font-black uppercase tracking-wider rounded-xl bg-emerald-600 text-white transition shadow-sm";
-        btnPistas.className = "px-6 py-2 text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:text-slate-200 transition";
-      } else {
-        btnPistas.className = "px-6 py-2 text-xs font-black uppercase tracking-wider rounded-xl bg-emerald-600 text-white transition shadow-sm";
-        btnTermo.className = "px-6 py-2 text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:text-slate-200 transition";
-      }
+      document.getElementById('btnGameTermo').className = mode === 'termo' ? "px-5 py-2 text-[11px] md:text-xs font-black uppercase tracking-wider rounded-xl bg-emerald-600 text-white shadow-sm" : "px-5 py-2 text-[11px] md:text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:text-slate-200";
+      document.getElementById('btnGamePistas').className = mode === 'pistas' ? "px-5 py-2 text-[11px] md:text-xs font-black uppercase tracking-wider rounded-xl bg-emerald-600 text-white shadow-sm" : "px-5 py-2 text-[11px] md:text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:text-slate-200";
     }
 
     /* =========================================================================
-       1. MECÂNICA: TERMO DO VERDÃO (Grade Dinâmica)
+       GAMES ENGINE (SUPABASE INTEGRATION)
        ========================================================================= */
-    const WORD = TODAY_DATA.termo;
-    const MAX_GUESSES = 6;
-    const WORD_LENGTH = WORD.length;
-    
-    let termoGuesses = [];
-    let currentTermoGuess = "";
-    let termoGameOver = false;
+    async function loadDailyChallenge() {
+      const { data, error } = await db.from('game_challenges').select('*').order('id', { ascending: true });
+      if (data && data.length > 0) {
+        const start = new Date("2026-09-01").setHours(0,0,0,0);
+        const todayMs = new Date().setHours(0,0,0,0);
+        daysSinceStart = Math.max(0, Math.floor((todayMs - start) / 86400000));
+        const index = daysSinceStart % data.length;
+        dailyChallenge = data[index];
+        document.getElementById('termoDayCount').textContent = daysSinceStart + 1;
+        document.getElementById('pistasDayCount').textContent = daysSinceStart + 1;
+      }
+    }
 
-    function initTermo() {
+    async function loadGameStates() {
+      if (!dailyChallenge) return;
+      const { data } = await db.from('game_daily_results')
+        .select('*')
+        .eq('friend_name', currentUser)
+        .eq('play_date', todayDateStr);
+      
+      const termoData = data?.find(d => d.game_type === 'termo');
+      const pistasData = data?.find(d => d.game_type === 'pistas');
+
+      initTermo(termoData);
+      initPistas(pistasData);
+    }
+
+    async function saveGameState(gameType, score, won, completed, stateJson) {
+      await db.from('game_daily_results').upsert({
+        friend_name: currentUser,
+        game_type: gameType,
+        play_date: todayDateStr,
+        score: score,
+        won: won,
+        completed: completed,
+        game_state: stateJson
+      }, { onConflict: 'friend_name,game_type,play_date' });
+      
+      if(completed) loadDailyRankings();
+    }
+
+    /* =========================================================================
+       TERMO ALVIVERDE
+       ========================================================================= */
+    let termoWord, termoLen, termoMaxGuesses = 6;
+    let termoGuesses = [], currentTermoGuess = "", termoGameOver = false;
+
+    function initTermo(savedData) {
+      termoWord = dailyChallenge.termo_word.toUpperCase();
+      termoLen = termoWord.length;
+      termoGuesses = savedData?.game_state?.guesses || [];
+      termoGameOver = savedData?.completed || false;
+      currentTermoGuess = "";
+
       const grid = document.getElementById('termoGrid');
-      // GRADE DINÂMICA: Injeta as colunas baseadas no tamanho da palavra do banco
-      grid.style.gridTemplateColumns = `repeat(${WORD_LENGTH}, minmax(0, 1fr))`;
+      grid.style.gridTemplateColumns = `repeat(${termoLen}, minmax(0, 1fr))`;
       grid.innerHTML = '';
 
-      // Desenha o tabuleiro vazio
-      for (let i = 0; i < MAX_GUESSES * WORD_LENGTH; i++) {
+      for (let i = 0; i < termoMaxGuesses * termoLen; i++) {
         const tile = document.createElement('div');
         tile.id = `tile-${i}`;
-        tile.className = "w-12 h-12 md:w-14 md:h-14 border-2 border-emerald-900/60 bg-[#050e09] flex items-center justify-center text-2xl font-black text-white rounded-lg tile-flip shadow-inner";
+        tile.className = "w-10 h-10 md:w-14 md:h-14 border-2 border-emerald-900/60 bg-[#050e09] flex items-center justify-center text-xl md:text-2xl font-black text-white rounded-lg tile-flip shadow-inner";
         grid.appendChild(tile);
       }
-
       renderKeyboard();
+      
+      // Reconstrói estado visual
+      termoGuesses.forEach((g, idx) => applyGuessVisuals(g, idx * termoLen, true));
+      
+      if (termoGameOver) {
+        const won = savedData?.won;
+        endTermo(won, true);
+      }
     }
 
     function renderKeyboard() {
-      const keyboardLayout = [
-        ["Q","W","E","R","T","Y","U","I","O","P"],
-        ["A","S","D","F","G","H","J","K","L"],
-        ["ENTER","Z","X","C","V","B","N","M","⌫"]
-      ];
-      
+      const layout = [["Q","W","E","R","T","Y","U","I","O","P"], ["A","S","D","F","G","H","J","K","L"], ["ENTER","Z","X","C","V","B","N","M","⌫"]];
       const kbContainer = document.getElementById('termoKeyboard');
       kbContainer.innerHTML = '';
 
-      keyboardLayout.forEach(row => {
+      layout.forEach(row => {
         const rowDiv = document.createElement('div');
-        rowDiv.className = "flex justify-center gap-1.5";
+        rowDiv.className = "flex justify-center gap-0.5 md:gap-1.5"; // Gap ajustado pro mobile
         row.forEach(key => {
           const btn = document.createElement('button');
           btn.id = `key-${key}`;
           btn.textContent = key;
           btn.onclick = () => handleKeyClick(key);
           
-          let baseClass = "h-12 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-lg transition text-sm shadow-md active:scale-95 flex items-center justify-center ";
+          let baseClass = "h-10 md:h-12 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-lg transition text-[11px] md:text-sm shadow-md active:scale-95 flex items-center justify-center ";
           if (key === "ENTER" || key === "⌫") {
-            baseClass += "px-3 md:px-4 text-[11px] uppercase tracking-wider w-auto";
+            baseClass += "px-2 md:px-4 uppercase tracking-wider w-auto min-w-[45px]";
           } else {
-            baseClass += "w-8 md:w-10";
+            baseClass += "min-w-[28px] md:w-10 flex-1 max-w-[40px]"; // Teclas flexíveis e mais finas
           }
           btn.className = baseClass;
           rowDiv.appendChild(btn);
@@ -360,37 +487,15 @@
 
     function handleKeyClick(key) {
       if (termoGameOver) return;
-
-      if (key === "⌫") {
-        currentTermoGuess = currentTermoGuess.slice(0, -1);
-      } else if (key === "ENTER") {
-        if (currentTermoGuess.length === WORD_LENGTH) {
-          submitTermoGuess();
-        } else {
-          showToast("Letras insuficientes!", "⚠️");
-        }
-      } else {
-        if (currentTermoGuess.length < WORD_LENGTH) {
-          currentTermoGuess += key;
-        }
-      }
+      if (key === "⌫") currentTermoGuess = currentTermoGuess.slice(0, -1);
+      else if (key === "ENTER" && currentTermoGuess.length === termoLen) submitTermoGuess();
+      else if (key !== "ENTER" && currentTermoGuess.length < termoLen) currentTermoGuess += key;
       updateGridDisplay();
     }
 
-    // Suporte a teclado físico
-    document.addEventListener('keydown', (e) => {
-      if (document.getElementById('viewJogos').style.display !== 'block') return;
-      if (document.getElementById('gameTermoContainer').style.display === 'none') return;
-      
-      const key = e.key.toUpperCase();
-      if (key === "BACKSPACE") handleKeyClick("⌫");
-      else if (key === "ENTER") handleKeyClick("ENTER");
-      else if (/^[A-Z]$/.test(key)) handleKeyClick(key);
-    });
-
     function updateGridDisplay() {
-      const startIndex = termoGuesses.length * WORD_LENGTH;
-      for (let i = 0; i < WORD_LENGTH; i++) {
+      const startIndex = termoGuesses.length * termoLen;
+      for (let i = 0; i < termoLen; i++) {
         const tile = document.getElementById(`tile-${startIndex + i}`);
         tile.textContent = currentTermoGuess[i] || "";
         if (currentTermoGuess[i]) {
@@ -403,238 +508,206 @@
       }
     }
 
-    function submitTermoGuess() {
+    async function submitTermoGuess() {
       const guess = currentTermoGuess;
       termoGuesses.push(guess);
+      const startIndex = (termoGuesses.length - 1) * termoLen;
       
-      const startIndex = (termoGuesses.length - 1) * WORD_LENGTH;
-      let targetArray = WORD.split('');
-      let guessColors = Array(WORD_LENGTH).fill('gray');
+      applyGuessVisuals(guess, startIndex, false);
+      currentTermoGuess = "";
 
-      // 1ª Passagem: Achar os Verdes (certos)
-      for (let i = 0; i < WORD_LENGTH; i++) {
-        if (guess[i] === targetArray[i]) {
-          guessColors[i] = 'green';
-          targetArray[i] = null; // marca como resolvido
+      const won = (guess === termoWord);
+      termoGameOver = won || (termoGuesses.length === termoMaxGuesses);
+
+      await saveGameState('termo', won ? termoGuesses.length : 0, won, termoGameOver, { guesses: termoGuesses });
+
+      setTimeout(() => { if (termoGameOver) endTermo(won); }, termoLen * 150 + 200);
+    }
+
+    function applyGuessVisuals(guess, startIndex, instant) {
+      let targetArray = termoWord.split('');
+      let colors = Array(termoLen).fill('gray');
+
+      for (let i = 0; i < termoLen; i++) {
+        if (guess[i] === targetArray[i]) { colors[i] = 'green'; targetArray[i] = null; }
+      }
+      for (let i = 0; i < termoLen; i++) {
+        if (colors[i] !== 'green' && targetArray.includes(guess[i])) {
+          colors[i] = 'yellow'; targetArray[targetArray.indexOf(guess[i])] = null;
         }
       }
 
-      // 2ª Passagem: Achar os Amarelos (posição errada)
-      for (let i = 0; i < WORD_LENGTH; i++) {
-        if (guessColors[i] !== 'green') {
-          const foundIdx = targetArray.indexOf(guess[i]);
-          if (foundIdx !== -1) {
-            guessColors[i] = 'yellow';
-            targetArray[foundIdx] = null;
-          }
-        }
-      }
-
-      // Animação e Pintura das Letras
-      for (let i = 0; i < WORD_LENGTH; i++) {
+      for (let i = 0; i < termoLen; i++) {
+        const delay = instant ? 0 : i * 150;
         setTimeout(() => {
           const tile = document.getElementById(`tile-${startIndex + i}`);
           const keyBtn = document.getElementById(`key-${guess[i]}`);
+          tile.textContent = guess[i];
+          tile.classList.remove('bg-[#050e09]', 'border-emerald-600', 'border-emerald-900/60');
           
-          tile.classList.remove('bg-[#050e09]', 'border-emerald-600');
-          
-          if (guessColors[i] === 'green') {
+          if (colors[i] === 'green') {
             tile.classList.add('bg-emerald-600', 'border-emerald-500');
-            keyBtn.className = keyBtn.className.replace(/bg-slate-[87]00/g, 'bg-emerald-600');
-          } else if (guessColors[i] === 'yellow') {
+            if(keyBtn) keyBtn.className = keyBtn.className.replace(/bg-slate-[87]00/g, 'bg-emerald-600');
+          } else if (colors[i] === 'yellow') {
             tile.classList.add('bg-amber-500', 'border-amber-400');
-            if (!keyBtn.className.includes('bg-emerald-600')) {
-              keyBtn.className = keyBtn.className.replace(/bg-slate-[87]00/g, 'bg-amber-500');
-            }
+            if (keyBtn && !keyBtn.className.includes('bg-emerald-600')) keyBtn.className = keyBtn.className.replace(/bg-slate-[87]00/g, 'bg-amber-500');
           } else {
             tile.classList.add('bg-slate-800', 'border-slate-700', 'text-slate-400');
-            if (!keyBtn.className.includes('bg-emerald-600') && !keyBtn.className.includes('bg-amber-500')) {
-              keyBtn.className = keyBtn.className.replace(/bg-slate-[87]00/g, 'bg-slate-900 text-slate-500');
-            }
+            if (keyBtn && !keyBtn.className.includes('bg-emerald-600') && !keyBtn.className.includes('bg-amber-500')) keyBtn.className = keyBtn.className.replace(/bg-slate-[87]00/g, 'bg-slate-900 text-slate-500');
           }
-        }, i * 150); // Efeito cascata
+        }, delay);
       }
-
-      currentTermoGuess = "";
-
-      // Checa Vitória ou Fim de Jogo
-      setTimeout(() => {
-        if (guess === WORD) {
-          termoGameOver = true;
-          endTermo(true);
-        } else if (termoGuesses.length === MAX_GUESSES) {
-          termoGameOver = true;
-          endTermo(false);
-        }
-      }, WORD_LENGTH * 150 + 200);
     }
 
-    function endTermo(won) {
-      const resDiv = document.getElementById('termoResult');
-      const resTitle = document.getElementById('termoResultTitle');
-      resDiv.style.display = 'block';
-      
+    function endTermo(won, instant = false) {
+      document.getElementById('termoResult').style.display = 'block';
+      const title = document.getElementById('termoResultTitle');
       if (won) {
-        resTitle.innerHTML = `🐷 Sensacional!<br><span class="text-sm text-emerald-400 font-medium">Você acertou em ${termoGuesses.length} tentativa(s).</span>`;
-        showToast("Vitória Alviverde!", "🏆");
+        title.innerHTML = `🐷 Sensacional!<br><span class="text-sm text-emerald-400 font-medium">Acertou em ${termoGuesses.length} tentativa(s).</span>`;
+        if(!instant) showToast("Vitória Alviverde!", "🏆");
       } else {
-        resTitle.innerHTML = `😢 Fim de Jogo<br><span class="text-sm text-rose-400 font-medium">A palavra era ${WORD}.</span>`;
+        title.innerHTML = `😢 Fim de Jogo<br><span class="text-sm text-rose-400 font-medium">A palavra era ${termoWord}.</span>`;
       }
     }
 
-    function shareTermo() {
-      let gridString = `Termo do Verdão #${daysSinceStart + 1} - ${termoGameOver && termoGuesses[termoGuesses.length-1] === WORD ? termoGuesses.length : 'X'}/${MAX_GUESSES}\n\n`;
-      
+    function shareTermoToWhatsApp() {
+      let txt = `Termo do Verdão #${daysSinceStart + 1} - ${termoGameOver && termoGuesses[termoGuesses.length-1] === termoWord ? termoGuesses.length : 'X'}/${termoMaxGuesses}\n\n`;
       termoGuesses.forEach(guess => {
-        let targetArray = WORD.split('');
-        let rowStr = Array(WORD_LENGTH).fill('⬛');
-        
-        for (let i = 0; i < WORD_LENGTH; i++) {
-          if (guess[i] === targetArray[i]) {
-            rowStr[i] = '🟩';
-            targetArray[i] = null;
-          }
+        let targetArray = termoWord.split(''), rowStr = Array(termoLen).fill('⬛');
+        for (let i = 0; i < termoLen; i++) { if (guess[i] === targetArray[i]) { rowStr[i] = '🟩'; targetArray[i] = null; } }
+        for (let i = 0; i < termoLen; i++) {
+          if (rowStr[i] !== '🟩' && targetArray.includes(guess[i])) { rowStr[i] = '🟨'; targetArray[targetArray.indexOf(guess[i])] = null; }
         }
-        for (let i = 0; i < WORD_LENGTH; i++) {
-          if (rowStr[i] !== '🟩') {
-            const foundIdx = targetArray.indexOf(guess[i]);
-            if (foundIdx !== -1) {
-              rowStr[i] = '🟨';
-              targetArray[foundIdx] = null;
-            }
-          }
-        }
-        gridString += rowStr.join('') + '\n';
+        txt += rowStr.join('') + '\n';
       });
-      gridString += `\nJogue em: ${window.location.origin}`;
-
-      if (navigator.share) {
-        navigator.share({ title: 'Termo do Verdão', text: gridString }).catch(()=>{});
-      } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(gridString);
-        showToast("Copiado para o WhatsApp!");
-      }
+      txt += `\nJogue em: ${window.location.origin}`;
+      
+      const url = `https://wa.me/?text=${encodeURIComponent(txt)}`;
+      window.open(url, '_blank');
     }
 
     /* =========================================================================
-       2. MECÂNICA: QUEM É O JOGADOR? (Pistas Progressivas)
+       QUEM É O JOGADOR? (PISTAS)
        ========================================================================= */
-    const JOGADOR_DATA = TODAY_DATA.jogador;
-    let currentClueIndex = 0;
-    let pistasGameOver = false;
-    let scorePistas = 500;
+    let pScore = 500, pClueIdx = 0, pGameOver = false;
+    let pPlayerName = "";
     
-    function initPistas() {
+    function initPistas(savedData) {
+      pPlayerName = dailyChallenge.player_name;
+      pScore = savedData?.score ?? 500;
+      pClueIdx = savedData?.game_state?.clueIndex ?? 0;
+      pGameOver = savedData?.completed ?? false;
+      const won = savedData?.won ?? false;
+
       document.getElementById('cluesContainer').innerHTML = '';
-      revealNextClue(); // Abre a primeira de graça (valendo 500)
+      document.getElementById('currentPistasScore').textContent = `${pScore} pts`;
+
+      const cluesToRender = pClueIdx === 0 ? 1 : pClueIdx; 
+      pClueIdx = 0; // Reset p/ renderizar sequencial
+      for(let i=0; i<cluesToRender; i++) renderClueUI();
+
+      if (pGameOver) endPistas(won);
     }
 
-    function revealNextClue() {
-      if (pistasGameOver || currentClueIndex >= 5) return;
+    async function revealNextClue(manualClick = false) {
+      if (pGameOver || pClueIdx >= 5) return;
+      if (manualClick) pScore -= 100; // Penalidade unificada
+      renderClueUI();
+      await saveGameState('pistas', pScore, false, false, { clueIndex: pClueIdx });
+    }
 
-      // Penaliza 100 pontos por pista extra (Pista 1 não penaliza, logo score = 500)
-      if (currentClueIndex > 0) {
-        scorePistas -= 100;
-        document.getElementById('currentPistasScore').textContent = `${scorePistas} pts`;
-      }
-
-      const clueTitles = ["Pista 1: Carreira", "Pista 2: Perfil", "Pista 3: Títulos", "Pista 4: Período", "Pista 5: Curiosidade Ouro"];
-      const clueText = JOGADOR_DATA.pistas[currentClueIndex];
-
-      const clueDiv = document.createElement('div');
-      clueDiv.className = "bg-[#05110a] p-4 rounded-2xl border border-emerald-900/60 shadow-sm animate-[popIn_0.3s_ease]";
-      clueDiv.innerHTML = `
-        <span class="text-[10px] uppercase font-black tracking-widest text-emerald-500 block mb-1">${clueTitles[currentClueIndex]}</span>
-        <p class="text-sm font-bold text-slate-200 leading-snug">${clueText}</p>
-      `;
+    function renderClueUI() {
+      if(pClueIdx >= 5) return;
+      const titles = ["Pista 1: Carreira", "Pista 2: Perfil", "Pista 3: Títulos", "Pista 4: Período", "Pista 5: Curiosidade"];
+      const texts = [dailyChallenge.clue_career, dailyChallenge.clue_profile, dailyChallenge.clue_titles, dailyChallenge.clue_period, dailyChallenge.clue_trivia];
       
-      document.getElementById('cluesContainer').appendChild(clueDiv);
-      currentClueIndex++;
-
-      const btnReveal = document.getElementById('btnRevealClue');
-      if (currentClueIndex >= 5) {
-        btnReveal.style.display = 'none';
-      }
+      const div = document.createElement('div');
+      div.className = "bg-[#05110a] p-4 rounded-2xl border border-emerald-900/60 shadow-sm animate-[popIn_0.3s_ease]";
+      div.innerHTML = `<span class="text-[10px] uppercase font-black tracking-widest text-emerald-500 block mb-1">${titles[pClueIdx]}</span><p class="text-sm font-bold text-slate-200 leading-snug">${texts[pClueIdx]}</p>`;
+      document.getElementById('cluesContainer').appendChild(div);
+      
+      pClueIdx++;
+      document.getElementById('currentPistasScore').textContent = `${pScore} pts`;
+      if (pClueIdx >= 5) document.getElementById('btnRevealClue').style.display = 'none';
     }
 
-    function cleanStringForComparison(str) {
-      return str.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    }
-
-    function guessPista() {
-      if (pistasGameOver) return;
+    async function guessPista() {
+      if (pGameOver) return;
       const inputEl = document.getElementById('inputPistaGuess');
-      const guess = cleanStringForComparison(inputEl.value);
-      const answer = cleanStringForComparison(JOGADOR_DATA.nome);
-
+      const guess = cleanStr(inputEl.value);
+      const answer = cleanStr(pPlayerName);
       if (!guess) return;
 
       if (guess === answer || answer.includes(guess)) {
-        // Acertou! (Permite acerto se o cara digitar "Gomez" em vez de "Gustavo Gomez")
+        await saveGameState('pistas', pScore, true, true, { clueIndex: pClueIdx });
         endPistas(true);
       } else {
-        // Errou! Penalti de 50 pontos
-        scorePistas -= 50;
-        document.getElementById('currentPistasScore').textContent = `${scorePistas} pts`;
+        pScore -= 100; // Penalidade unificada
         inputEl.value = '';
         inputEl.classList.add('border-rose-500');
-        showToast("Errou! -50 pontos", "🔴");
+        showToast("Errou! -100 pts", "🔴");
         setTimeout(() => inputEl.classList.remove('border-rose-500'), 1000);
         
-        if (scorePistas <= 0) {
-          scorePistas = 0;
+        if (pScore <= 0) {
+          pScore = 0;
+          await saveGameState('pistas', 0, false, true, { clueIndex: pClueIdx });
           endPistas(false);
+        } else {
+          revealNextClue(false); // Abre a proxima dica automático sem cobrar de novo
         }
       }
     }
 
     function endPistas(won) {
-      pistasGameOver = true;
+      pGameOver = true;
       document.getElementById('btnRevealClue').style.display = 'none';
       document.getElementById('pistasInputArea').style.display = 'none';
-      
-      const resDiv = document.getElementById('pistasResult');
-      resDiv.style.display = 'block';
+      document.getElementById('pistasResult').style.display = 'block';
 
       if (won) {
         document.getElementById('pistasResultIcon').textContent = "🎉";
-        document.getElementById('pistasResultTitle').textContent = "Você é um enciclopédia!";
-        document.getElementById('pistasResultDesc').innerHTML = `O jogador era o <b>${JOGADOR_DATA.nome}</b>.<br>Você cravou fazendo ${scorePistas} pontos.`;
+        document.getElementById('pistasResultTitle').textContent = "Enciclopédia!";
+        document.getElementById('pistasResultDesc').innerHTML = `O jogador era <b>${pPlayerName}</b>.<br>Você cravou fazendo ${pScore} pontos.`;
       } else {
         document.getElementById('pistasResultIcon').textContent = "💀";
         document.getElementById('pistasResultTitle').textContent = "Game Over!";
-        document.getElementById('pistasResultDesc').innerHTML = `Acabaram seus pontos.<br>O jogador escondido era o <b>${JOGADOR_DATA.nome}</b>.`;
+        document.getElementById('pistasResultDesc').innerHTML = `Pontos zerados.<br>O jogador era <b>${pPlayerName}</b>.`;
       }
     }
 
-    function sharePistas() {
-      const txt = `🕵️ Quem é o Jogador? #${daysSinceStart + 1}\n\nFiz ${scorePistas} pontos!\nPrecisei usar ${currentClueIndex} dica(s).\n\nConsegue me bater? Jogue em: ${window.location.origin}`;
-      if (navigator.share) {
-        navigator.share({ title: 'Quem é o Jogador - Verdão', text: txt }).catch(()=>{});
-      } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(txt);
-        showToast("Copiado para o WhatsApp!");
-      }
+    function sharePistasToWhatsApp() {
+      const txt = `🕵️ Quem é o Jogador? #${daysSinceStart + 1}\n\nFiz ${pScore} pontos!\nAbri ${pClueIdx} dica(s).\n\nConsegue me bater? Jogue em: ${window.location.origin}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, '_blank');
     }
 
-    function showToast(text, icon = "✅") {
-      const toast = document.getElementById('toastMessage');
-      document.getElementById('toastText').textContent = text;
-      document.getElementById('toastIcon').textContent = icon;
-      toast.classList.remove('translate-y-20', 'opacity-0');
-      setTimeout(() => {
-        toast.classList.add('translate-y-20', 'opacity-0');
-      }, 2500);
+    /* =========================================================================
+       RANKING DIÁRIO DOS JOGOS
+       ========================================================================= */
+    async function loadDailyRankings() {
+      const { data } = await db.from('game_daily_results').select('*').eq('play_date', todayDateStr);
+      if(!data) return;
+
+      const termoData = data.filter(d => d.game_type === 'termo' && d.completed && d.won).sort((a,b) => a.score - b.score);
+      const pistasData = data.filter(d => d.game_type === 'pistas' && d.completed).sort((a,b) => b.score - a.score);
+
+      const rTermo = document.getElementById('rankingTermoList');
+      rTermo.innerHTML = termoData.length ? termoData.slice(0,5).map((d, i) => `
+        <div class="flex justify-between items-center py-2">
+          <div class="flex items-center gap-2"><span class="text-xs font-black text-emerald-500 w-3">${i+1}</span><span class="font-bold text-white text-xs">${d.friend_name}</span></div>
+          <span class="text-xs font-black text-emerald-400">${d.score}/6</span>
+        </div>
+      `).join('') : '<div class="text-xs text-slate-500 text-center py-2">Ninguém finalizou.</div>';
+
+      const rPistas = document.getElementById('rankingPistasList');
+      rPistas.innerHTML = pistasData.length ? pistasData.slice(0,5).map((d, i) => `
+        <div class="flex justify-between items-center py-2">
+          <div class="flex items-center gap-2"><span class="text-xs font-black text-emerald-500 w-3">${i+1}</span><span class="font-bold text-white text-xs">${d.friend_name}</span></div>
+          <span class="text-xs font-black text-amber-400">${d.score} pts</span>
+        </div>
+      `).join('') : '<div class="text-xs text-slate-500 text-center py-2">Ninguém finalizou.</div>';
     }
 
-    // Inicializa o laboratório e força exibir a aba de Jogos direto
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appScreen').style.display = 'block';
-    document.getElementById('loggedUserDisplay').textContent = "Torcedor Alfa";
-    switchTab('jogos');
-    initTermo();
-    initPistas();
-
+    checkSession();
   </script>
 </body>
 </html>

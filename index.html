@@ -20,7 +20,14 @@
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="bg-[#08120d] text-slate-100 min-h-screen p-3 md:p-6 selection:bg-emerald-500 selection:text-white">
+<body class="bg-[#08120d] text-slate-100 min-h-screen p-3 md:p-6 selection:bg-emerald-500 selection:text-white relative overflow-x-hidden">
+
+  <!-- MARCA D'ÁGUA CLEAN DE FUNDO (SILHUETA SUAVE PALMEIRAS) -->
+  <div class="fixed inset-0 pointer-events-none z-0 flex items-center justify-center overflow-hidden">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/1/10/Palmeiras_logo.svg" 
+         alt="Palmeiras Watermark" 
+         class="w-[320px] md:w-[600px] opacity-[0.035] select-none filter invert contrast-200 pointer-events-none">
+  </div>
 
   <!-- TOAST NOTIFICATION -->
   <div id="toastMessage" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-emerald-500 text-slate-950 font-black px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2 text-sm border border-emerald-300">
@@ -29,7 +36,7 @@
   </div>
 
   <!-- TELA DE LOGIN -->
-  <div id="loginScreen" style="display: flex;" class="min-h-[85vh] items-center justify-center">
+  <div id="loginScreen" style="display: flex;" class="min-h-[85vh] items-center justify-center relative z-10">
     <div class="bg-gradient-to-b from-[#0e2419] to-[#0a1811] p-8 md:p-10 rounded-3xl border border-emerald-500/30 shadow-[0_20px_50px_rgba(0,0,0,0.8)] max-w-sm w-full text-center space-y-6 relative overflow-hidden backdrop-blur-xl">
       <div class="absolute -top-20 -left-20 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
       <div class="absolute -bottom-20 -right-20 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -53,7 +60,7 @@
   </div>
 
   <!-- APLICAÇÃO PRINCIPAL -->
-  <div id="appScreen" style="display: none;" class="max-w-4xl mx-auto space-y-5">
+  <div id="appScreen" style="display: none;" class="max-w-4xl mx-auto space-y-5 relative z-10">
     
     <!-- HEADER -->
     <header class="bg-gradient-to-b from-[#0e251a] to-[#081710] p-4 md:p-5 rounded-3xl shadow-lg border border-emerald-500/20 space-y-3">
@@ -165,7 +172,7 @@
               <th class="p-4 sticky left-0 bg-[#07140c] z-20 min-w-[170px] shadow-[3px_0_10px_rgba(0,0,0,0.5)]">Atleta</th>
               <th class="p-4 min-w-[100px]">Posição</th>
               <th class="p-4 text-emerald-400 font-black min-w-[90px]">Média</th>
-              <!-- Colunas apenas de quem votou serão injetadas aqui -->
+              <!-- Colunas apenas de quem votou são injetadas aqui -->
             </tr>
           </thead>
           <tbody id="compareTableBody" class="divide-y divide-emerald-950/60 text-sm"></tbody>
@@ -425,10 +432,8 @@
       const score = Math.max(0, Math.min(10, parseFloat(val) || 0));
       let hue;
       if (score <= 5) {
-        // Interpola de 0 (vermelho) a 50 (amarelo)
         hue = (score / 5) * 50;
       } else {
-        // Interpola de 50 (amarelo) a 142 (verde neon)
         hue = 50 + ((score - 5) / 5) * 92;
       }
       return `hsl(${Math.round(hue)}, 85%, 50%)`;
@@ -768,7 +773,6 @@
       }
     }
 
-    // Atualiza a nota e a cor dinamicamente durante o arrasto do slider
     function updateScoreDisplay(playerId, scoreVal) {
       const valEl = document.getElementById(`val-${playerId}`);
       const rangeEl = document.getElementById(`range-${playerId}`);
@@ -801,9 +805,9 @@
         range.disabled = true;
         range.classList.add('opacity-30', 'cursor-not-allowed');
         val.textContent = 'S/N';
-        val.style.color = '#475569'; // slate-600
+        val.style.color = '#475569';
         if (cardEl) {
-          cardEl.style.borderColor = 'rgba(6, 78, 59, 0.4)'; // borda padrão esmeralda escuro
+          cardEl.style.borderColor = 'rgba(6, 78, 59, 0.4)';
         }
       }
     }
@@ -1352,7 +1356,7 @@
 Confere as notas e dê seus palpites:
 ${siteUrl}`;
 
-      // Tenta menu nativo do celular (navigator.share)
+      // Menu nativo do celular
       if (navigator.share) {
         try {
           await navigator.share({
@@ -1361,12 +1365,11 @@ ${siteUrl}`;
           });
           return;
         } catch (err) {
-          // Se o usuário cancelou o menu de compartilhar, encerra sem alertar erro
           if (err.name === 'AbortError') return;
         }
       }
 
-      // Fallback para Clipboard (desktop ou navegadores sem Web Share API)
+      // Fallback para Clipboard
       if (navigator.clipboard && navigator.clipboard.writeText) {
         try {
           await navigator.clipboard.writeText(shareText);
@@ -1377,7 +1380,6 @@ ${siteUrl}`;
         }
       }
 
-      // Fallback manual (prompt) caso clipboard seja bloqueado
       prompt("Copie o texto abaixo para compartilhar no grupo:", shareText);
     }
 

@@ -190,6 +190,7 @@
       <div class="flex p-1 bg-[#050e09] rounded-2xl border border-emerald-900/60 w-fit mx-auto shadow-inner">
         <button id="btnGameTermo" onclick="setGameMode('termo')" class="px-5 py-2 text-[11px] md:text-xs font-black uppercase tracking-wider rounded-xl bg-emerald-600 text-white shadow-sm">Termo Alviverde</button>
         <button id="btnGamePistas" onclick="setGameMode('pistas')" class="px-5 py-2 text-[11px] md:text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:text-slate-200">Quem é o Jogador?</button>
+        <button id="btnGameMissing11" onclick="setGameMode('missing11')" class="px-5 py-2 text-[11px] md:text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:text-slate-200">Missing 11</button>
       </div>
 
       <!-- JOGO 1: TERMO ALVIVERDE -->
@@ -239,6 +240,34 @@
           <h4 id="pistasResultTitle" class="text-xl font-black text-white"></h4>
           <p id="pistasResultDesc" class="text-sm text-emerald-200 font-medium"></p>
           <button onclick="sharePistasToWhatsApp()" class="mt-2 px-5 py-3 bg-emerald-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg w-full">📲 Compartilhar no Zap</button>
+        </div>
+      </div>
+
+      <!-- JOGO 3: MISSING 11 -->
+      <div id="gameMissing11Container" style="display: none;" class="max-w-2xl mx-auto space-y-5">
+        <div class="text-center space-y-1">
+          <h3 class="text-xl font-black text-white uppercase tracking-tight">Missing 11</h3>
+          <p class="text-[10px] text-emerald-400/80 font-semibold uppercase tracking-widest">Escalação histórica #<span id="missing11DayCount">1</span></p>
+        </div>
+
+        <div class="bg-gradient-to-b from-[#0e2419] to-[#0a1811] border border-emerald-500/25 rounded-3xl p-5 text-center space-y-2 shadow-lg">
+          <span id="missing11Competition" class="text-[10px] font-black uppercase tracking-widest text-emerald-400"></span>
+          <h4 id="missing11Title" class="text-lg md:text-xl font-black text-white"></h4>
+          <p id="missing11Hint" class="text-xs text-slate-300 font-medium"></p>
+          <div class="pt-2 flex items-center justify-center gap-3 text-xs font-black"><span class="text-emerald-400"><span id="missing11FoundCount">0</span>/11 encontrados</span><span class="text-slate-600">•</span><span id="missing11Status" class="text-slate-400">Em jogo</span></div>
+        </div>
+
+        <div id="missing11Grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+
+        <div id="missing11InputArea" class="bg-[#050e09] border border-emerald-900/60 p-3 rounded-2xl flex gap-2 shadow-inner">
+          <input id="inputMissing11Guess" type="text" autocomplete="off" placeholder="Digite um jogador da escalação..." class="w-full bg-transparent px-3 py-2 text-white font-bold focus:outline-none placeholder:text-slate-600">
+          <button id="btnMissing11Guess" onclick="guessMissing11()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 font-black rounded-xl text-white text-xs uppercase tracking-wider shrink-0">Chutar</button>
+        </div>
+
+        <div id="missing11Result" style="display: none;" class="bg-emerald-950/40 border border-emerald-500/30 p-5 rounded-2xl text-center space-y-3">
+          <h4 class="text-lg font-black text-white">🐷 Escalação completa!</h4>
+          <p id="missing11ResultText" class="text-sm text-emerald-200"></p>
+          <button onclick="shareMissing11ToWhatsApp()" class="px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg w-full">📲 Compartilhar no Zap</button>
         </div>
       </div>
       

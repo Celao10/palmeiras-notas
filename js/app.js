@@ -342,7 +342,7 @@
       const curMatch = allMatches.find(m => m.id === currentMatchId), isLocked = isMatchStarted(curMatch);
       ['inputPredPalmeiras', 'inputPredOpponent'].forEach(id => { document.getElementById(id).disabled = isLocked; isLocked ? document.getElementById(id).classList.add('opacity-30') : document.getElementById(id).classList.remove('opacity-30'); });
       document.getElementById('btnSavePrediction').style.display = isLocked ? 'none' : 'block'; document.getElementById('bolaoLockText').style.display = isLocked ? 'block' : 'none';
-      document.getElementById('bolaoLockBadge').textContent = isLocked ? '🔒 Fechado' : '🔓 Aberto'; document.getElementById('bolaoLockBadge').className = isLocked ? 'text-[11px] font-extrabold px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'text-[11px] font-extrabold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+      document.getElementById('bolaoLockBadge').textContent = isLocked ? '🔒 Fechado' : '🔓 Aberto'; document.getElementById('bolaoLockBadge').className = isLocked ? 'inline-flex items-center self-start shrink-0 whitespace-nowrap text-[11px] font-extrabold px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'inline-flex items-center self-start shrink-0 whitespace-nowrap text-[11px] font-extrabold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
 
       const myPred = predictions.find(p => p.match_id === currentMatchId && p.friend_name === currentUser);
       document.getElementById('inputPredPalmeiras').value = myPred ? myPred.palmeiras_goals : ''; document.getElementById('inputPredOpponent').value = myPred ? myPred.opponent_goals : '';

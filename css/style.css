@@ -1,0 +1,43 @@
+    body { font-family: 'Plus Jakarta Sans', sans-serif; touch-action: manipulation; }
+    ::-webkit-scrollbar { height: 8px; width: 6px; }
+    ::-webkit-scrollbar-track { background: #061811; }
+    ::-webkit-scrollbar-thumb { background: #15803d; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #16a34a; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    @keyframes popIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      40% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .tile-pop { animation: popIn 0.15s ease forwards; }
+    .tile-flip { transition: transform 0.5s, background-color 0.5s, border-color 0.5s, color 0.5s; }
+
+    .loading-spinner {
+      width: 1.25rem;
+      height: 1.25rem;
+      border: 3px solid rgba(16, 185, 129, 0.25);
+      border-top-color: #34d399;
+      border-radius: 9999px;
+      animation: spin 0.7s linear infinite;
+    }
+    button:disabled { cursor: wait; opacity: 0.65; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 767px) {
+      #appScreen { padding-bottom: 5.5rem; }
+      #mainNavigation {
+        position: fixed;
+        z-index: 40;
+        left: 0.5rem;
+        right: 0.5rem;
+        bottom: max(0.5rem, env(safe-area-inset-bottom));
+        padding: 0.5rem;
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        border-radius: 1.25rem;
+        background: rgba(5, 17, 10, 0.96);
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.65);
+        backdrop-filter: blur(14px);
+      }
+    }

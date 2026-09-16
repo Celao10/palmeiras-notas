@@ -88,7 +88,7 @@
     </header>
 
     <!-- NAVEGAÇÃO DE ABAS -->
-    <nav id="mainNavigation" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar" aria-label="Navegação principal">
+    <nav id="mainNavigation" class="flex gap-2 overflow-x-auto no-scrollbar bg-[#06130c]/85 border border-emerald-900/45 p-2 rounded-2xl shadow-sm" aria-label="Navegação principal">
       <button id="tabRate" onclick="switchTab('rate')" class="px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 transition border border-emerald-900/30">Avaliar Partida</button>
       <button id="tabCompare" onclick="switchTab('compare')" class="px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 transition border border-emerald-900/30">Notas da Rodada</button>
       <button id="tabBolao" onclick="switchTab('bolao')" class="px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 transition border border-emerald-900/30">⚽ Bolão</button>
@@ -133,7 +133,7 @@
     </main>
 
     <main id="viewBolao" style="display: none;" class="space-y-5">
-      <div class="bg-gradient-to-b from-[#0e2419] to-[#0a1811] p-6 rounded-3xl border border-emerald-500/20 shadow-lg space-y-4">
+      <div id="predictionCard" class="bg-gradient-to-b from-[#0e2419] to-[#0a1811] p-5 md:p-6 rounded-3xl border border-emerald-500/20 shadow-lg space-y-4">
         <div class="flex justify-between gap-2">
           <div><h3 class="text-base font-black text-white uppercase tracking-wider">Seu Palpite</h3><span id="bolaoMatchTitle" class="text-xs text-emerald-400 font-semibold block mt-0.5"></span></div>
           <span id="bolaoLockBadge" class="text-xs font-bold px-3 py-1 rounded-full w-fit h-fit"></span>

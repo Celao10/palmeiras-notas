@@ -384,6 +384,7 @@
         document.getElementById(`view${t.charAt(0).toUpperCase() + t.slice(1)}`).style.display = t === tab ? 'block' : 'none';
         const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
         btn.className = t === tab ? "px-4 py-2.5 font-extrabold rounded-2xl bg-emerald-500 text-slate-950 text-xs uppercase tracking-wider shrink-0 shadow-md shadow-emerald-950" : "px-4 py-2.5 font-bold rounded-2xl bg-[#0c1c14] text-slate-400 hover:text-slate-200 text-xs uppercase tracking-wider shrink-0 border border-emerald-900/30";
+        if (t === tab && window.matchMedia('(max-width: 767px)').matches) btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
       });
     }
 

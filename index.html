@@ -226,14 +226,15 @@
           <h3 class="text-xl font-black text-white uppercase tracking-tight">Quem é o Jogador?</h3>
           <p class="text-[10px] text-emerald-400/80 font-semibold uppercase tracking-widest">Desafio Diário #<span id="pistasDayCount">1</span></p>
         </div>
+
         <div class="bg-[#050e09] border border-emerald-900/60 p-4 rounded-2xl flex items-center justify-between shadow-inner">
           <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pontuação Atual:</span>
           <span id="currentPistasScore" class="text-2xl font-black text-emerald-400">500 pts</span>
         </div>
+
+        <!-- Aqui vão aparecer as dicas reveladas -->
         <div class="space-y-3" id="cluesContainer"></div>
-        <button id="btnRevealClue" onclick="revealNextClue(true)" class="w-full py-3.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 font-bold text-[11px] uppercase tracking-wider text-slate-300 rounded-xl transition">
-          👀 Revelar próxima pista (-100 pts)
-        </button>
+
         <div id="pistasInputArea" class="pt-4 border-t border-emerald-950 space-y-3">
           <label class="text-xs text-slate-400 font-bold uppercase tracking-wider block">Sabe quem é?</label>
           <div class="flex gap-2">
@@ -241,6 +242,7 @@
             <button onclick="guessPista()" class="px-5 py-3 bg-emerald-600 font-black rounded-xl text-white text-xs uppercase tracking-wider shrink-0">Chutar</button>
           </div>
         </div>
+
         <div id="pistasResult" style="display: none;" class="bg-gradient-to-br from-emerald-900/50 to-[#0a1811] border border-emerald-500/30 p-6 rounded-3xl text-center space-y-3 shadow-lg">
           <div class="text-4xl" id="pistasResultIcon">✅</div>
           <h4 id="pistasResultTitle" class="text-xl font-black text-white"></h4>
@@ -339,7 +341,6 @@
     let currentCraque = null, currentBagre = null;
 
     let termoChallenge = null, pistasChallenge = null, daysSinceStart = 1;
-    // CORREÇÃO CRÍTICA DE DATA AQUI PARA SUPORTE UNIVERSAL MOBILE
     const today = new Date();
     const todayDateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
 
@@ -361,33 +362,22 @@
       } catch (e) { console.error("Aviso: Falha ao carregar amigos", e); }
     }
 
-    // LOGIN COM BLINDAGEM DE ERROS
     async function handleLogin() {
       const btn = document.getElementById('btnLogin');
       const errEl = document.getElementById('loginError');
       try {
-        btn.textContent = 'Carregando...';
-        errEl.style.display = 'none';
-        
+        btn.textContent = 'Carregando...'; errEl.style.display = 'none';
         await loadFriendsFromDB();
         const input = document.getElementById('loginInput').value;
         const match = FRIENDS.find(f => cleanStr(f) === cleanStr(input));
-        
         if (match) {
-          currentUser = match;
-          localStorage.setItem('palmeiras_user', currentUser);
-          await checkSession();
+          currentUser = match; localStorage.setItem('palmeiras_user', currentUser); await checkSession();
         } else {
-          errEl.textContent = `Nome não autorizado. Use: ${FRIENDS.join(', ')}.`;
-          errEl.style.display = 'block';
+          errEl.textContent = `Nome não autorizado. Use: ${FRIENDS.join(', ')}.`; errEl.style.display = 'block';
         }
       } catch (err) {
-        console.error(err);
-        errEl.textContent = 'Erro de conexão. Verifique o banco Supabase.';
-        errEl.style.display = 'block';
-      } finally {
-        btn.textContent = 'Entrar na Resenha';
-      }
+        console.error(err); errEl.textContent = 'Erro de conexão.'; errEl.style.display = 'block';
+      } finally { btn.textContent = 'Entrar na Resenha'; }
     }
     document.getElementById('loginInput').addEventListener('keyup', e => { if (e.key === 'Enter') handleLogin(); });
 
@@ -402,12 +392,7 @@
           document.getElementById('loggedUserDisplay').textContent = currentUser;
           document.getElementById('adminToggleContainer').style.display = (cleanStr(currentUser) === 'celao') ? 'flex' : 'none';
           toggleAdminMode();
-          
-          await initApp();
-          await loadDailyChallenge();
-          await loadGameStates();
-          await loadDailyRankings();
-          
+          await initApp(); await loadDailyChallenge(); await loadGameStates(); await loadDailyRankings();
           switchTab('rate');
         } else {
           loginScreen.style.display = 'flex'; appScreen.style.display = 'none';
@@ -420,7 +405,6 @@
       document.getElementById('adminActionGroup').style.display = (isCelao && document.getElementById('adminSwitch').checked) ? 'flex' : 'none';
     }
 
-    // Modal Users
     function openManageUsersModal() { document.getElementById('manageUsersModal').style.display = 'flex'; document.getElementById('modalUserName').value = ''; renderManageUsersList(); }
     function closeManageUsersModal() { document.getElementById('manageUsersModal').style.display = 'none'; }
     function renderManageUsersList() {
@@ -764,9 +748,8 @@
       if (pGameOver) endPistas(savedData?.won ?? false);
     }
 
-    async function revealNextClue(manualClick = false) {
+    async function revealNextClue() {
       if (pGameOver || pClueIdx >= 5) return;
-      if (manualClick) pScore -= 100;
       renderClueUI(); await saveGameState('pistas', pScore, false, false, { clueIndex: pClueIdx });
     }
 
@@ -776,24 +759,30 @@
       const div = document.createElement('div'); div.className = "bg-[#05110a] p-4 rounded-2xl border border-emerald-900/60 shadow-sm animate-[popIn_0.3s_ease]";
       div.innerHTML = `<span class="text-[10px] uppercase font-black tracking-widest text-emerald-500 block mb-1">${t[pClueIdx]}</span><p class="text-sm font-bold text-slate-200 leading-snug">${txt[pClueIdx]}</p>`;
       document.getElementById('cluesContainer').appendChild(div); pClueIdx++; document.getElementById('currentPistasScore').textContent = `${pScore} pts`;
-      if (pClueIdx >= 5) document.getElementById('btnRevealClue').style.display = 'none';
     }
 
     async function guessPista() {
       if (pGameOver) return;
       const inputEl = document.getElementById('inputPistaGuess'), guess = cleanStr(inputEl.value), ans = cleanStr(pPlayerName);
       if (!guess) return;
+      
       if (guess === ans || ans.includes(guess)) {
         await saveGameState('pistas', pScore, true, true, { clueIndex: pClueIdx }); endPistas(true);
       } else {
         pScore -= 100; inputEl.value = ''; inputEl.classList.add('border-rose-500'); showToast("Errou! -100 pts", "🔴");
         setTimeout(() => inputEl.classList.remove('border-rose-500'), 1000);
-        if (pScore <= 0) { pScore = 0; await saveGameState('pistas', 0, false, true, { clueIndex: pClueIdx }); endPistas(false); } else revealNextClue(false);
+        if (pScore <= 0) { 
+          pScore = 0; 
+          await saveGameState('pistas', 0, false, true, { clueIndex: pClueIdx }); 
+          endPistas(false); 
+        } else {
+          revealNextClue();
+        }
       }
     }
 
     function endPistas(won) {
-      pGameOver = true; document.getElementById('btnRevealClue').style.display = 'none'; document.getElementById('pistasInputArea').style.display = 'none'; document.getElementById('pistasResult').style.display = 'block';
+      pGameOver = true; document.getElementById('pistasInputArea').style.display = 'none'; document.getElementById('pistasResult').style.display = 'block';
       if (won) { document.getElementById('pistasResultIcon').textContent = "🎉"; document.getElementById('pistasResultTitle').textContent = "Enciclopédia!"; document.getElementById('pistasResultDesc').innerHTML = `O jogador era <b>${pPlayerName}</b>.<br>Você cravou com ${pScore} pontos.`; } 
       else { document.getElementById('pistasResultIcon').textContent = "💀"; document.getElementById('pistasResultTitle').textContent = "Game Over!"; document.getElementById('pistasResultDesc').innerHTML = `Pontos zerados.<br>O jogador era <b>${pPlayerName}</b>.`; }
     }

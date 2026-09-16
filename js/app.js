@@ -668,8 +668,10 @@
       if (error) { reportError('Erro ao carregar ranking diário', error, 'Não foi possível carregar o ranking do dia.'); return; }
       if(!data) return;
       const tData = data.filter(d => d.game_type === 'termo' && d.completed && d.won).sort((a,b) => a.score - b.score), pData = data.filter(d => d.game_type === 'pistas' && d.completed).sort((a,b) => b.score - a.score);
+      const missing11Data = data.filter(d => d.game_type === 'missing11' && d.completed).sort((a, b) => (a.game_state?.attempts ?? Infinity) - (b.game_state?.attempts ?? Infinity));
       document.getElementById('rankingTermoList').innerHTML = tData.length ? tData.slice(0,5).map((d, i) => `<div class="flex justify-between items-center py-2"><div class="flex items-center gap-2"><span class="text-xs font-black text-emerald-500 w-3">${i+1}</span><span class="font-bold text-white text-xs">${d.friend_name}</span></div><span class="text-xs font-black text-emerald-400">${d.score}/6</span></div>`).join('') : '<div class="text-xs text-slate-500 text-center py-2">Ninguém finalizou.</div>';
       document.getElementById('rankingPistasList').innerHTML = pData.length ? pData.slice(0,5).map((d, i) => `<div class="flex justify-between items-center py-2"><div class="flex items-center gap-2"><span class="text-xs font-black text-emerald-500 w-3">${i+1}</span><span class="font-bold text-white text-xs">${d.friend_name}</span></div><span class="text-xs font-black text-amber-400">${d.score} pts</span></div>`).join('') : '<div class="text-xs text-slate-500 text-center py-2">Ninguém finalizou.</div>';
+      document.getElementById('rankingMissing11List').innerHTML = missing11Data.length ? missing11Data.slice(0,5).map((d, i) => `<div class="flex justify-between items-center py-2"><div class="flex items-center gap-2"><span class="text-xs font-black text-emerald-500 w-3">${i+1}</span><span class="font-bold text-white text-xs">${d.friend_name}</span></div><span class="text-xs font-black text-emerald-400">${d.game_state?.attempts ?? '-'} tent.</span></div>`).join('') : '<div class="text-xs text-slate-500 text-center py-2">Ninguém finalizou.</div>';
     }
 
     const modalCloseActions = {

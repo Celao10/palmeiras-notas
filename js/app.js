@@ -17,7 +17,7 @@
     let allMatches = [], currentMatchId = null, players = [], ratings = [], predictions = [];
     let currentCraque = null, currentBagre = null;
 
-    let termoChallenge = null, pistasChallenge = null, daysSinceStart = 1;
+    let termoChallenge = null, pistasChallenge = null, missing11Challenge = null, daysSinceStart = 1;
     const today = new Date();
     const todayDateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
 
@@ -94,7 +94,7 @@
           document.getElementById('adminToggleContainer').style.display = (cleanStr(currentUser) === 'celao') ? 'flex' : 'none';
           toggleAdminMode();
           showLoading('Preparando a resenha...');
-          await initApp(); await loadDailyChallenge(); await loadGameStates(); await loadDailyRankings();
+          await initApp(); await loadDailyChallenge(); await loadMissing11Challenge(); await loadGameStates(); await loadDailyRankings();
           switchTab('rate');
         } else {
           loginScreen.style.display = 'flex'; appScreen.style.display = 'none';
@@ -388,9 +388,10 @@
     }
 
     function setGameMode(mode) {
-      document.getElementById('gameTermoContainer').style.display = mode === 'termo' ? 'block' : 'none'; document.getElementById('gamePistasContainer').style.display = mode === 'pistas' ? 'block' : 'none';
+      document.getElementById('gameTermoContainer').style.display = mode === 'termo' ? 'block' : 'none'; document.getElementById('gamePistasContainer').style.display = mode === 'pistas' ? 'block' : 'none'; document.getElementById('gameMissing11Container').style.display = mode === 'missing11' ? 'block' : 'none';
       document.getElementById('btnGameTermo').className = mode === 'termo' ? "px-5 py-2 text-[11px] md:text-xs font-black uppercase tracking-wider rounded-xl bg-emerald-600 text-white shadow-sm" : "px-5 py-2 text-[11px] md:text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:text-slate-200";
       document.getElementById('btnGamePistas').className = mode === 'pistas' ? "px-5 py-2 text-[11px] md:text-xs font-black uppercase tracking-wider rounded-xl bg-emerald-600 text-white shadow-sm" : "px-5 py-2 text-[11px] md:text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:text-slate-200";
+      document.getElementById('btnGameMissing11').className = mode === 'missing11' ? "px-5 py-2 text-[11px] md:text-xs font-black uppercase tracking-wider rounded-xl bg-emerald-600 text-white shadow-sm" : "px-5 py-2 text-[11px] md:text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:text-slate-200";
     }
 
     /* =========================================================================
@@ -410,11 +411,24 @@
       } catch (err) { reportError('Erro ao carregar desafios', err, 'Não foi possível carregar os desafios do dia.'); }
     }
 
+    async function loadMissing11Challenge() {
+      try {
+        const { data, error } = await db.from('missing11_challenges').select('*').eq('active', true).order('id', { ascending: true });
+        if (error) throw error;
+        if (!data?.length) return;
+        missing11Challenge = data[daysSinceStart % data.length];
+        document.getElementById('missing11DayCount').textContent = daysSinceStart + 1;
+      } catch (error) {
+        console.warn('Missing 11 ainda não configurado.', error);
+      }
+    }
+
     async function loadGameStates() {
-      if (!termoChallenge || !pistasChallenge) return;
       const { data, error } = await db.from('game_daily_results').select('*').eq('friend_name', currentUser).eq('play_date', todayDateStr);
       if (error) { reportError('Erro ao carregar jogos', error, 'Não foi possível carregar seu progresso diário.'); return; }
-      initTermo(data?.find(d => d.game_type === 'termo')); initPistas(data?.find(d => d.game_type === 'pistas'));
+      if (termoChallenge) initTermo(data?.find(d => d.game_type === 'termo'));
+      if (pistasChallenge) initPistas(data?.find(d => d.game_type === 'pistas'));
+      initMissing11(data?.find(d => d.game_type === 'missing11'));
     }
 
     async function saveGameState(gameType, score, won, completed, stateJson) {
@@ -554,6 +568,98 @@
 
     function sharePistasToWhatsApp() {
       const txt = `🕵️ Quem é o Jogador? #${daysSinceStart + 1}\n\nFiz ${pScore} pontos!\nAbri ${pClueIdx} dica(s).\n\nConsegue me bater? Jogue em: ${window.location.origin}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, '_blank');
+    }
+
+    // Missing 11
+    let missing11Found = [], missing11Attempts = 0, missing11Complete = false;
+
+    function initMissing11(savedData) {
+      const grid = document.getElementById('missing11Grid');
+      if (!missing11Challenge?.lineup?.length) {
+        document.getElementById('missing11Title').textContent = 'Em breve';
+        document.getElementById('missing11Hint').textContent = 'Rode o arquivo SQL para liberar as escalações históricas.';
+        document.getElementById('missing11Competition').textContent = 'MISSING 11';
+        document.getElementById('missing11InputArea').style.display = 'none';
+        document.getElementById('missing11Result').style.display = 'none';
+        grid.innerHTML = '<div class="sm:col-span-2 py-8 text-center text-sm text-slate-500">A base de desafios ainda não foi cadastrada.</div>';
+        return;
+      }
+
+      const state = savedData?.game_state || {};
+      missing11Found = Array.isArray(state.found) ? state.found : [];
+      missing11Attempts = Number(state.attempts) || 0;
+      missing11Complete = Boolean(savedData?.completed) || missing11Found.length === missing11Challenge.lineup.length;
+
+      document.getElementById('missing11Competition').textContent = `${missing11Challenge.competition} • ${missing11Challenge.match_date.split('-').reverse().join('/')}`;
+      document.getElementById('missing11Title').textContent = missing11Challenge.title;
+      document.getElementById('missing11Hint').textContent = missing11Challenge.hint;
+      document.getElementById('missing11InputArea').style.display = missing11Complete ? 'none' : 'flex';
+      document.getElementById('missing11Result').style.display = missing11Complete ? 'block' : 'none';
+      document.getElementById('inputMissing11Guess').value = '';
+      renderMissing11();
+      if (missing11Complete) document.getElementById('missing11ResultText').textContent = `Você completou a escalação em ${missing11Attempts} tentativa(s).`;
+    }
+
+    function renderMissing11() {
+      if (!missing11Challenge?.lineup) return;
+      const grid = document.getElementById('missing11Grid');
+      grid.innerHTML = '';
+      missing11Challenge.lineup.forEach((player, index) => {
+        const found = missing11Found.includes(player.name);
+        const card = document.createElement('div');
+        card.className = `min-h-[74px] rounded-2xl border p-3 flex items-center gap-3 transition ${found ? 'bg-emerald-950/50 border-emerald-500/50' : 'bg-[#0a1811] border-emerald-900/40'}`;
+        const badge = document.createElement('span');
+        badge.className = `w-8 h-8 shrink-0 rounded-xl flex items-center justify-center text-xs font-black ${found ? 'bg-emerald-500 text-slate-950' : 'bg-[#05110a] text-emerald-500 border border-emerald-900/60'}`;
+        badge.textContent = index + 1;
+        const text = document.createElement('div');
+        const pos = document.createElement('span'); pos.className = 'block text-[10px] font-black uppercase tracking-widest text-emerald-500'; pos.textContent = player.position;
+        const name = document.createElement('span'); name.className = `block font-black text-sm ${found ? 'text-white' : 'text-slate-600'}`; name.textContent = found ? player.name : '???';
+        text.append(pos, name); card.append(badge, text); grid.appendChild(card);
+      });
+      document.getElementById('missing11FoundCount').textContent = missing11Found.length;
+      document.getElementById('missing11Status').textContent = missing11Complete ? 'Concluído' : `${missing11Attempts} tentativa(s)`;
+      document.getElementById('missing11Status').className = missing11Complete ? 'text-emerald-400' : 'text-slate-400';
+    }
+
+    async function guessMissing11() {
+      if (!missing11Challenge || missing11Complete) return;
+      const input = document.getElementById('inputMissing11Guess');
+      const guess = cleanStr(input.value);
+      if (!guess) return;
+      missing11Attempts++;
+      const player = missing11Challenge.lineup.find(item => {
+        const accepted = [item.name, ...(item.aliases || [])].map(cleanStr);
+        return accepted.includes(guess);
+      });
+      input.value = '';
+
+      if (!player) {
+        input.classList.add('border-rose-500'); showToast('Esse jogador não está nessa escalação.', '❌');
+        setTimeout(() => input.classList.remove('border-rose-500'), 900);
+      } else if (missing11Found.includes(player.name)) {
+        showToast(`${player.name} já foi encontrado.`, '👀');
+      } else {
+        missing11Found.push(player.name); showToast(`${player.name} encontrado!`, '✅');
+      }
+
+      missing11Complete = missing11Found.length === missing11Challenge.lineup.length;
+      await saveGameState('missing11', missing11Complete ? Math.max(0, 100 - missing11Attempts) : 0, missing11Complete, missing11Complete, { found: missing11Found, attempts: missing11Attempts, challengeId: missing11Challenge.id });
+      renderMissing11();
+      if (missing11Complete) {
+        document.getElementById('missing11InputArea').style.display = 'none';
+        document.getElementById('missing11Result').style.display = 'block';
+        document.getElementById('missing11ResultText').textContent = `Você completou a escalação em ${missing11Attempts} tentativa(s).`;
+        showToast('Missing 11 completo!', '🏆');
+      }
+    }
+
+    document.getElementById('inputMissing11Guess').addEventListener('keydown', event => {
+      if (event.key === 'Enter') guessMissing11();
+    });
+
+    function shareMissing11ToWhatsApp() {
+      const txt = `🟩 Missing 11 do Verdão #${daysSinceStart + 1}\n${missing11Challenge.title}\n\nCompletei a escalação em ${missing11Attempts} tentativa(s)! 🐷\n\nJogue em: ${window.location.origin}`;
       window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, '_blank');
     }
 

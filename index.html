@@ -22,8 +22,8 @@
 
   <!-- MARCA D'ÁGUA CLEAN DE FUNDO -->
   <div class="fixed inset-0 pointer-events-none z-0 flex items-center justify-center overflow-hidden">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/1/10/Palmeiras_logo.svg" 
-         alt="Palmeiras Watermark" 
+    <img id="watermarkLogo" src="https://upload.wikimedia.org/wikipedia/commons/1/10/Palmeiras_logo.svg" 
+         alt="Marca d'água do Palmeiras" 
          class="w-[320px] md:w-[600px] opacity-[0.035] select-none filter invert contrast-200 pointer-events-none">
   </div>
 
@@ -35,10 +35,10 @@
   <!-- TELA DE LOGIN -->
   <div id="loginScreen" style="display: flex;" class="min-h-[85vh] items-center justify-center relative z-10 p-2">
     <div class="bg-gradient-to-b from-[#0e2419] to-[#0a1811] p-8 md:p-10 rounded-3xl border border-emerald-500/30 shadow-[0_20px_50px_rgba(0,0,0,0.8)] max-w-sm w-full text-center space-y-6 relative overflow-hidden backdrop-blur-xl">
-      <div class="w-20 h-20 bg-gradient-to-tr from-emerald-800 to-emerald-600 border-2 border-emerald-400/40 rounded-3xl flex items-center justify-center mx-auto text-4xl shadow-lg">🐷</div>
+      <div id="loginBrandIcon" class="w-20 h-20 bg-gradient-to-tr from-emerald-800 to-emerald-600 border-2 border-emerald-400/40 rounded-3xl flex items-center justify-center mx-auto text-4xl shadow-lg">🐷</div>
       <div>
-        <h2 class="text-2xl font-black tracking-tight text-white uppercase">Notas do Verdão</h2>
-        <p class="text-emerald-400/80 text-xs font-semibold tracking-wider uppercase mt-1">Painel da Torcida</p>
+        <h2 id="loginBrandTitle" class="text-2xl font-black tracking-tight text-white uppercase">Notas do Verdão</h2>
+        <p id="loginBrandSubtitle" class="text-emerald-400/80 text-xs font-semibold tracking-wider uppercase mt-1">Painel da Torcida</p>
       </div>
       <div class="space-y-4">
         <input id="loginInput" type="text" placeholder="Seu nome ou apelido..." 
@@ -58,8 +58,8 @@
     <header class="bg-gradient-to-b from-[#0e251a] to-[#081710] p-4 md:p-5 rounded-3xl shadow-lg border border-emerald-500/20 space-y-3">
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-2.5">
-          <span class="text-2xl">🐷</span>
-          <h1 class="text-lg md:text-2xl font-black tracking-tight text-white uppercase">Notas do Verdão</h1>
+          <span id="appBrandIcon" class="text-2xl">🐷</span>
+          <div><h1 id="appBrandTitle" class="text-lg md:text-2xl font-black tracking-tight text-white uppercase">Notas do Verdão</h1><p id="eventModeBadge" style="display: none;" class="text-[9px] font-black uppercase tracking-[0.16em] text-amber-300 mt-0.5">Modo Data FIFA</p></div>
         </div>
         <div class="flex items-center gap-2">
           <div class="bg-[#05110a] px-3 py-1 rounded-xl border border-emerald-900/60 flex items-center gap-2">
@@ -83,6 +83,7 @@
           <button onclick="openNewMatchModal()" class="bg-emerald-400 text-slate-950 font-black text-[11px] uppercase tracking-wider px-2.5 py-1.5 rounded-lg shrink-0 shadow-sm">+ Jogo</button>
           <button onclick="openScoreModal()" class="bg-amber-400 text-slate-950 font-black text-[11px] uppercase tracking-wider px-2.5 py-1.5 rounded-lg shrink-0 shadow-sm">Placar</button>
           <button onclick="openManageUsersModal()" class="bg-sky-400 text-slate-950 font-black text-[11px] uppercase tracking-wider px-2.5 py-1.5 rounded-lg shrink-0 shadow-sm">Amigos</button>
+          <button id="btnFifaMode" onclick="toggleFifaMode()" class="bg-amber-300 text-slate-950 font-black text-[11px] uppercase tracking-wider px-2.5 py-1.5 rounded-lg shrink-0 shadow-sm">🇧🇷 Data FIFA</button>
         </div>
       </div>
     </header>
@@ -140,7 +141,7 @@
         </div>
         <div class="flex items-center justify-center gap-4 py-2">
           <div class="text-center">
-            <span class="block font-bold text-xs text-slate-400 uppercase tracking-wider mb-1.5">Palmeiras</span>
+            <span id="bolaoTeamName" class="block font-bold text-xs text-slate-400 uppercase tracking-wider mb-1.5">Palmeiras</span>
             <input id="inputPredPalmeiras" type="number" min="0" max="20" class="w-16 h-14 bg-[#050e09] border border-emerald-900/80 rounded-2xl text-center text-3xl font-black text-white focus:outline-none focus:border-emerald-400">
           </div>
           <span class="text-2xl font-black text-emerald-600/60 mt-5">✕</span>
@@ -295,7 +296,7 @@
   <!-- Modais -->
   <div id="newMatchModal" style="display: none;" class="fixed inset-0 bg-black/85 items-center justify-center p-4 z-50 backdrop-blur-sm">
     <div class="bg-[#0a1811] p-6 rounded-3xl border border-emerald-500/40 max-w-md w-full space-y-4 shadow-2xl">
-      <h3 class="text-xl font-black text-white">Cadastrar Próximo Jogo ⚽</h3>
+      <h3 id="newMatchModalTitle" class="text-xl font-black text-white">Cadastrar Próximo Jogo ⚽</h3>
       <div class="space-y-3">
         <div><label class="text-xs text-slate-300 font-semibold block mb-1">Adversário:</label><input id="modalOpponent" type="text" placeholder="Ex: Corinthians, Flamengo..." class="w-full bg-[#050e09] border border-emerald-900/80 rounded-xl p-3 text-white font-bold focus:border-emerald-400 focus:outline-none"></div>
         <div><label class="text-xs text-slate-300 font-semibold block mb-1">Competição:</label><input id="modalCompetition" type="text" placeholder="Ex: Brasileirão, Allianz Parque..." class="w-full bg-[#050e09] border border-emerald-900/80 rounded-xl p-3 text-white font-bold focus:border-emerald-400 focus:outline-none"></div>
@@ -312,7 +313,7 @@
     <div class="bg-[#0a1811] p-6 rounded-3xl border border-amber-500/40 max-w-md w-full space-y-4 shadow-2xl">
       <h3 class="text-xl font-black text-white">Placar Oficial do Jogo 🏁</h3>
       <div class="flex items-center justify-center gap-4 py-2">
-        <div class="text-center"><span class="block font-bold text-xs text-slate-300 mb-1 uppercase">Palmeiras</span><input id="scorePalmeiras" type="number" class="w-16 h-14 bg-[#050e09] border border-emerald-900/80 rounded-xl text-center text-2xl font-black text-white"></div>
+        <div class="text-center"><span id="scoreModalTeamName" class="block font-bold text-xs text-slate-300 mb-1 uppercase">Palmeiras</span><input id="scorePalmeiras" type="number" class="w-16 h-14 bg-[#050e09] border border-emerald-900/80 rounded-xl text-center text-2xl font-black text-white"></div>
         <span class="text-xl font-black text-slate-500 mt-4">✕</span>
         <div class="text-center"><span id="scoreModalOpponent" class="block font-bold text-xs text-slate-300 mb-1 uppercase">Adversário</span><input id="scoreOpponent" type="number" class="w-16 h-14 bg-[#050e09] border border-emerald-900/80 rounded-xl text-center text-2xl font-black text-white"></div>
       </div>

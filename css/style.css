@@ -28,12 +28,48 @@
     button:disabled { cursor: wait; opacity: 0.65; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Identidade temporária do evento da Seleção, sem mexer na estrutura do app. */
-    body.data-fifa { background: #061126; }
-    body.data-fifa #appScreen > header { border-color: rgba(250, 204, 21, 0.45); background: linear-gradient(180deg, #102852 0%, #071735 100%); }
-    body.data-fifa #mainNavigation { border-color: rgba(34, 197, 94, 0.32); background: rgba(5, 20, 45, 0.88); }
+    /* Identidade temporária do evento da Seleção, sem alterar o tema do Palmeiras. */
+    body.data-fifa {
+      background:
+        radial-gradient(circle at 50% -12%, rgba(37, 99, 235, 0.34), transparent 42rem),
+        radial-gradient(circle at 12% 45%, rgba(22, 163, 74, 0.13), transparent 24rem),
+        #040d22;
+    }
+    body.data-fifa #watermarkLogo {
+      display: block !important;
+      width: min(68vw, 620px) !important;
+      opacity: 0.065 !important;
+      filter: none !important;
+      transform: translateY(1.5rem);
+    }
+    body.data-fifa #appScreen > header {
+      border-color: rgba(250, 204, 21, 0.55);
+      background: linear-gradient(145deg, rgba(16, 44, 91, 0.98) 0%, rgba(5, 23, 57, 0.98) 68%, rgba(5, 62, 42, 0.92) 100%);
+      box-shadow: 0 16px 42px rgba(0, 0, 0, 0.34), inset 0 1px rgba(255,255,255,0.06);
+    }
+    body.data-fifa #mainNavigation { border-color: rgba(59, 130, 246, 0.5); background: rgba(5, 22, 53, 0.9); }
+    body.data-fifa #mainNavigation button.bg-emerald-500 { background: linear-gradient(135deg, #facc15, #f59e0b); color: #071a3a; }
     body.data-fifa #eventModeBadge { color: #fde047; }
     body.data-fifa #btnFifaMode { background: #facc15; }
+    body.data-fifa .data-fifa-hero {
+      display: flex;
+      border: 1px solid rgba(96, 165, 250, 0.42);
+      background: linear-gradient(90deg, rgba(30, 64, 175, 0.36), rgba(6, 78, 59, 0.32));
+      box-shadow: inset 0 1px rgba(255,255,255,0.04);
+    }
+    body.data-fifa #predictionCard,
+    body.data-fifa #viewBolao > .grid > div,
+    body.data-fifa #viewRanking > .bg-\[\#0a1811\],
+    body.data-fifa #rateLockWarning,
+    body.data-fifa #playersList > div {
+      border-color: rgba(59, 130, 246, 0.34) !important;
+    }
+    body.data-fifa #btnSave,
+    body.data-fifa #btnSavePrediction {
+      background: linear-gradient(90deg, #1d4ed8, #2563eb 62%, #16a34a) !important;
+      box-shadow: 0 10px 22px rgba(30, 64, 175, 0.25);
+    }
+    body.data-fifa #bolaoLockBadge { border-color: rgba(250, 204, 21, 0.48); }
 
     @media (max-width: 767px) {
       #appScreen { padding-bottom: 1rem; }
@@ -58,4 +94,5 @@
 
       #predictionCard { padding: 1.25rem; }
       #predictionCard .flex.items-center.justify-center { gap: 2.25rem; }
+      body.data-fifa #watermarkLogo { width: 88vw !important; opacity: 0.052 !important; }
     }

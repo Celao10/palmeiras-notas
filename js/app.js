@@ -12,16 +12,30 @@
       { name: "Felipe Anderson", pos: "Meia/Atacante" }, { name: "Jhon Arias", pos: "Atacante" }, { name: "Paulinho", pos: "Atacante" }, { name: "Ramón Sosa", pos: "Atacante" },
       { name: "Vitor Roque", pos: "Atacante" }, { name: "Flaco López", pos: "Atacante" }, { name: "Abel Ferreira", pos: "Técnico" }
     ];
+    // Lista-base da Seleção. Cada partida recebe uma cópia desta lista, então
+    // futuras convocações não alteram avaliações que já foram feitas.
+    const ELENCO_BRASIL = [
+      { name: "Alisson", pos: "Goleiro" }, { name: "Ederson", pos: "Goleiro" }, { name: "Bento", pos: "Goleiro" },
+      { name: "Danilo", pos: "Lateral" }, { name: "Vanderson", pos: "Lateral" }, { name: "Wesley", pos: "Lateral" }, { name: "Guilherme Arana", pos: "Lateral" }, { name: "Carlos Augusto", pos: "Lateral" },
+      { name: "Marquinhos", pos: "Zagueiro" }, { name: "Éder Militão", pos: "Zagueiro" }, { name: "Gabriel Magalhães", pos: "Zagueiro" }, { name: "Bremer", pos: "Zagueiro" }, { name: "Murillo", pos: "Zagueiro" }, { name: "Beraldo", pos: "Zagueiro" },
+      { name: "Casemiro", pos: "Volante" }, { name: "Bruno Guimarães", pos: "Meia" }, { name: "João Gomes", pos: "Volante" }, { name: "André", pos: "Volante" }, { name: "Lucas Paquetá", pos: "Meia" },
+      { name: "Vinícius Júnior", pos: "Atacante" }, { name: "Rodrygo", pos: "Atacante" }, { name: "Raphinha", pos: "Atacante" }, { name: "Savinho", pos: "Atacante" }, { name: "Estêvão", pos: "Atacante" }, { name: "Endrick", pos: "Atacante" }, { name: "João Pedro", pos: "Atacante" }, { name: "Richarlison", pos: "Atacante" }
+    ];
 
     let currentUser = localStorage.getItem('palmeiras_user') || null;
     let allMatches = [], currentMatchId = null, players = [], ratings = [], predictions = [];
     let currentCraque = null, currentBagre = null;
+    let appMode = 'palmeiras';
+    let appModeChannel = null;
 
     let termoChallenge = null, pistasChallenge = null, missing11Challenge = null, daysSinceStart = 1;
     const today = new Date();
     const todayDateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
 
     function cleanStr(str) { return (str || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+    function isFifaMode() { return appMode === 'data_fifa'; }
+    function getTeamName() { return isFifaMode() ? 'Brasil' : 'Palmeiras'; }
+    function getActiveRoster() { return isFifaMode() ? ELENCO_BRASIL : ELENCO_ATUAL; }
     function getScoreColor(val) {
       const s = Math.max(0, Math.min(10, parseFloat(val) || 0));
       return `hsl(${Math.round(s <= 5 ? (s/5)*50 : 50+((s-5)/5)*92)}, 85%, 50%)`;
@@ -63,6 +77,76 @@
       } catch (e) { reportError('Falha ao carregar amigos', e, 'Não foi possível carregar os amigos.'); throw e; }
     }
 
+    async function loadAppMode() {
+      try {
+        const { data, error } = await db.from('app_settings').select('active_mode').eq('id', true).maybeSingle();
+        if (error) throw error;
+        appMode = data?.active_mode === 'data_fifa' ? 'data_fifa' : 'palmeiras';
+      } catch (error) {
+        // Enquanto o SQL não tiver sido executado, o site continua no modo Palmeiras.
+        console.warn('Configuração global ainda não instalada.', error);
+        appMode = 'palmeiras';
+      }
+      applyModeUI();
+    }
+
+    function startAppModeSubscription() {
+      if (appModeChannel) return;
+      appModeChannel = db.channel('notas-do-verdao-event-mode')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'app_settings', filter: 'id=eq.true' }, async payload => {
+          const nextMode = payload.new?.active_mode === 'data_fifa' ? 'data_fifa' : 'palmeiras';
+          if (nextMode === appMode) return;
+          appMode = nextMode; currentMatchId = null; applyModeUI();
+          if (isFifaMode()) switchTab('rate');
+          showLoading('Atualizando o evento...');
+          try {
+            await initApp();
+            if (!isFifaMode()) { await loadDailyChallenge(); await loadMissing11Challenge(); await loadGameStates(); await loadDailyRankings(); }
+            showToast(isFifaMode() ? '🇧🇷 Data FIFA ativada!' : '🐷 Voltamos ao Palmeiras!');
+          } catch (error) { reportError('Erro ao receber modo global', error); }
+          finally { hideLoading(); }
+        }).subscribe();
+    }
+
+    function applyModeUI() {
+      const fifa = isFifaMode(), team = getTeamName();
+      document.body.classList.toggle('data-fifa', fifa);
+      document.title = fifa ? 'Notas da Seleção' : 'Notas do Verdão';
+      document.getElementById('appBrandIcon').textContent = fifa ? '🇧🇷' : '🐷';
+      document.getElementById('appBrandTitle').textContent = fifa ? 'Notas da Seleção' : 'Notas do Verdão';
+      document.getElementById('loginBrandIcon').textContent = fifa ? '🇧🇷' : '🐷';
+      document.getElementById('loginBrandTitle').textContent = fifa ? 'Notas da Seleção' : 'Notas do Verdão';
+      document.getElementById('loginBrandSubtitle').textContent = fifa ? 'Especial Data FIFA' : 'Painel da Torcida';
+      document.getElementById('eventModeBadge').style.display = fifa ? 'block' : 'none';
+      document.getElementById('tabJogos').style.display = fifa ? 'none' : 'inline-flex';
+      document.getElementById('bolaoTeamName').textContent = team;
+      document.getElementById('scoreModalTeamName').textContent = team;
+      document.getElementById('newMatchModalTitle').textContent = fifa ? 'Cadastrar Jogo do Brasil 🇧🇷' : 'Cadastrar Próximo Jogo ⚽';
+      document.getElementById('modalOpponent').placeholder = fifa ? 'Ex: Argentina, Japão...' : 'Ex: Corinthians, Flamengo...';
+      document.getElementById('modalCompetition').placeholder = fifa ? 'Ex: Amistoso Internacional, Eliminatórias...' : 'Ex: Brasileirão, Allianz Parque...';
+      document.getElementById('watermarkLogo').style.display = fifa ? 'none' : 'block';
+      const modeButton = document.getElementById('btnFifaMode');
+      if (modeButton) modeButton.textContent = fifa ? '🐷 Voltar Palmeiras' : '🇧🇷 Data FIFA';
+    }
+
+    async function toggleFifaMode() {
+      if (!currentUser || cleanStr(currentUser) !== 'celao') return;
+      const nextMode = isFifaMode() ? 'palmeiras' : 'data_fifa';
+      const label = nextMode === 'data_fifa' ? 'ativar o modo Data FIFA para todos?' : 'voltar o site ao modo Palmeiras para todos?';
+      if (!confirm(`Deseja ${label}`)) return;
+      try {
+        const { error } = await db.from('app_settings').update({ active_mode: nextMode, updated_at: new Date().toISOString() }).eq('id', true);
+        if (error) throw error;
+        appMode = nextMode; currentMatchId = null; applyModeUI();
+        if (isFifaMode()) switchTab('rate');
+        showLoading('Trocando o evento...');
+        await initApp();
+        if (!isFifaMode()) { await loadDailyChallenge(); await loadMissing11Challenge(); await loadGameStates(); await loadDailyRankings(); }
+        showToast(isFifaMode() ? 'Modo Data FIFA ativado para todos!' : 'Modo Palmeiras restaurado para todos!');
+      } catch (error) { reportError('Erro ao alternar modo', error, 'Não foi possível alterar o evento global.'); }
+      finally { hideLoading(); }
+    }
+
     async function handleLogin() {
       const btn = document.getElementById('btnLogin');
       const errEl = document.getElementById('loginError');
@@ -94,7 +178,8 @@
           document.getElementById('adminToggleContainer').style.display = (cleanStr(currentUser) === 'celao') ? 'flex' : 'none';
           toggleAdminMode();
           showLoading('Preparando a resenha...');
-          await initApp(); await loadDailyChallenge(); await loadMissing11Challenge(); await loadGameStates(); await loadDailyRankings();
+          await loadAppMode(); startAppModeSubscription(); await initApp();
+          if (!isFifaMode()) { await loadDailyChallenge(); await loadMissing11Challenge(); await loadGameStates(); await loadDailyRankings(); }
           switchTab('rate');
         } else {
           loginScreen.style.display = 'flex'; appScreen.style.display = 'none';
@@ -142,9 +227,12 @@
 
     async function initApp() {
       try {
-        let { data: matches, error: matchesError } = await db.from('matches').select('*').order('match_date', { ascending: false });
+        let { data: matches, error: matchesError } = await db.from('matches').select('*').eq('event_mode', appMode).order('match_date', { ascending: false });
         if (matchesError) throw matchesError;
         if (!matches || matches.length === 0) {
+          if (isFifaMode()) {
+            allMatches = []; currentMatchId = null; renderMatchSelect(); await loadData(); return;
+          }
           const { data: newMatch, error: createError } = await db.from('matches').insert([INITIAL_MATCH]).select().single();
           if (createError) throw createError;
           allMatches = [newMatch]; currentMatchId = newMatch?.id;
@@ -161,9 +249,13 @@
 
     function renderMatchSelect() {
       const select = document.getElementById('matchSelect'); select.innerHTML = '';
+      if (!allMatches.length) {
+        select.innerHTML = `<option value="">Nenhum jogo do ${getTeamName()} cadastrado ainda</option>`;
+        return;
+      }
       allMatches.forEach(m => {
         const scoreStr = (m.home_score !== null && m.away_score !== null) ? ` [${m.home_score}x${m.away_score}]` : '';
-        select.innerHTML += `<option value="${m.id}" ${m.id === currentMatchId ? 'selected' : ''}>Palmeiras vs ${m.opponent}${scoreStr} (${m.competition})</option>`;
+        select.innerHTML += `<option value="${m.id}" ${m.id === currentMatchId ? 'selected' : ''}>${getTeamName()} vs ${m.opponent}${scoreStr} (${m.competition})</option>`;
       });
     }
     async function onSelectMatch() {
@@ -181,9 +273,9 @@
       const btn = document.getElementById('btnCreateMatch');
       try {
         await runButtonAction(btn, 'Criando...', async () => {
-          const { data: newMatch, error: matchError } = await db.from('matches').insert([{ opponent: opp, competition: comp || 'Brasileirão', match_date: mTime.split('T')[0], match_time: new Date(mTime).toISOString() }]).select().single();
+          const { data: newMatch, error: matchError } = await db.from('matches').insert([{ opponent: opp, competition: comp || (isFifaMode() ? 'Data FIFA' : 'Brasileirão'), match_date: mTime.split('T')[0], match_time: new Date(mTime).toISOString(), event_mode: appMode }]).select().single();
           if (matchError) throw matchError;
-          const { error: playersError } = await db.from('match_players').insert(ELENCO_ATUAL.map(p => ({ match_id: newMatch.id, player_name: p.name, position: p.pos })));
+          const { error: playersError } = await db.from('match_players').insert(getActiveRoster().map(p => ({ match_id: newMatch.id, player_name: p.name, position: p.pos })));
           if (playersError) throw playersError;
           currentMatchId = newMatch.id; closeNewMatchModal(); await initApp();
         });
@@ -193,7 +285,7 @@
 
     function openScoreModal() {
       const curMatch = allMatches.find(m => m.id === currentMatchId); if (!curMatch) return;
-      document.getElementById('scoreModalOpponent').textContent = curMatch.opponent; document.getElementById('scorePalmeiras').value = curMatch.home_score !== null ? curMatch.home_score : ''; document.getElementById('scoreOpponent').value = curMatch.away_score !== null ? curMatch.away_score : '';
+      document.getElementById('scoreModalTeamName').textContent = getTeamName(); document.getElementById('scoreModalOpponent').textContent = curMatch.opponent; document.getElementById('scorePalmeiras').value = curMatch.home_score !== null ? curMatch.home_score : ''; document.getElementById('scoreOpponent').value = curMatch.away_score !== null ? curMatch.away_score : '';
       document.getElementById('scoreModal').style.display = 'flex';
     }
     function closeScoreModal() { document.getElementById('scoreModal').style.display = 'none'; }
@@ -216,6 +308,7 @@
 
     async function loadData() {
       try {
+        if (!currentMatchId) { renderEmptyMatchState(); return; }
         const { data: pData, error: playersError } = await db.from('match_players').select('*').eq('match_id', currentMatchId);
         if (playersError) throw playersError;
         players = pData || [];
@@ -236,10 +329,25 @@
         const curMatch = allMatches.find(m => m.id === currentMatchId);
         if (curMatch) {
           const timeStr = curMatch.match_time ? new Date(curMatch.match_time).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : curMatch.match_date;
-          document.getElementById('bolaoMatchTitle').textContent = `Palmeiras vs ${curMatch.opponent} • ${timeStr}`; document.getElementById('bolaoOpponentName').textContent = curMatch.opponent;
+          document.getElementById('bolaoMatchTitle').textContent = `${getTeamName()} vs ${curMatch.opponent} • ${timeStr}`; document.getElementById('bolaoOpponentName').textContent = curMatch.opponent;
         }
         renderRateList(); renderCompareTable(); renderBolao(); renderRanking();
       } catch (err) { reportError('Erro ao carregar dados da partida', err, 'Não foi possível atualizar os dados do jogo.'); }
+    }
+
+    function renderEmptyMatchState() {
+      players = []; ratings = []; predictions = [];
+      const adminHint = currentUser && cleanStr(currentUser) === 'celao' ? ' Ative o Admin e use “+ Jogo” para publicar o primeiro.' : '';
+      document.getElementById('playersList').innerHTML = `<div class="col-span-2 bg-[#0a1811] border border-emerald-900/40 rounded-3xl p-8 text-center text-sm text-slate-400">Ainda não há jogo do ${getTeamName()} publicado.${adminHint}</div>`;
+      document.getElementById('btnSave').style.display = 'none';
+      document.getElementById('bolaoMatchTitle').textContent = `Aguardando próximo jogo do ${getTeamName()}`;
+      document.getElementById('bolaoOpponentName').textContent = 'Adversário';
+      document.getElementById('inputPredPalmeiras').disabled = true; document.getElementById('inputPredOpponent').disabled = true;
+      document.getElementById('btnSavePrediction').style.display = 'none';
+      document.getElementById('matchPredictionsList').innerHTML = '<div class="text-xs text-slate-500">Aguardando jogo.</div>';
+      document.getElementById('bolaoRankingList').innerHTML = '<div class="text-xs text-slate-500">Aguardando jogos.</div>';
+      document.getElementById('monthlyRankingList').innerHTML = '<div class="text-xs text-slate-500 py-3">Aguardando avaliações.</div>';
+      document.getElementById('craqueName').textContent = '-'; document.getElementById('bagreName').textContent = '-';
     }
 
     function updateScoreDisplay(playerId, scoreVal) {
@@ -257,6 +365,7 @@
 
     function renderRateList() {
       const curMatch = allMatches.find(m => m.id === currentMatchId), hasStarted = isMatchStarted(curMatch), isExpired = isMatchExpired(curMatch);
+      if (!curMatch) return;
       const userRatings = ratings.filter(r => r.friend_name === currentUser && players.some(p => p.id === r.match_player_id)), hasVoted = userRatings.length > 0;
       const lockWarn = document.getElementById('rateLockWarning'), readOnlyInfo = document.getElementById('rateReadOnlyInfo'), content = document.getElementById('rateContent'), btnSave = document.getElementById('btnSave');
       
@@ -324,7 +433,7 @@
     }
 
     async function savePrediction() {
-      const curMatch = allMatches.find(m => m.id === currentMatchId); if (isMatchStarted(curMatch)) return alert('Bolão encerrado!');
+      const curMatch = allMatches.find(m => m.id === currentMatchId); if (!curMatch) return alert('Ainda não há jogo publicado.'); if (isMatchStarted(curMatch)) return alert('Bolão encerrado!');
       const pGoals = document.getElementById('inputPredPalmeiras').value, oGoals = document.getElementById('inputPredOpponent').value;
       if (pGoals === '' || oGoals === '') return alert('Digite os gols.');
       const btn = document.getElementById('btnSavePrediction');
@@ -340,6 +449,7 @@
 
     function renderBolao() {
       const curMatch = allMatches.find(m => m.id === currentMatchId), isLocked = isMatchStarted(curMatch);
+      if (!curMatch) return;
       ['inputPredPalmeiras', 'inputPredOpponent'].forEach(id => { document.getElementById(id).disabled = isLocked; isLocked ? document.getElementById(id).classList.add('opacity-30') : document.getElementById(id).classList.remove('opacity-30'); });
       document.getElementById('btnSavePrediction').style.display = isLocked ? 'none' : 'block'; document.getElementById('bolaoLockText').style.display = isLocked ? 'block' : 'none';
       document.getElementById('bolaoLockBadge').textContent = isLocked ? '🔒 Fechado' : '🔓 Aberto'; document.getElementById('bolaoLockBadge').className = isLocked ? 'inline-flex items-center self-start shrink-0 whitespace-nowrap text-[11px] font-extrabold px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'inline-flex items-center self-start shrink-0 whitespace-nowrap text-[11px] font-extrabold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
@@ -375,11 +485,12 @@
     async function shareMatchSummary() {
       const curMatch = allMatches.find(m => m.id === currentMatchId); if (!curMatch || (!currentCraque && !currentBagre)) return alert("Ainda não há notas nesta partida!");
       const placar = (curMatch.home_score !== null && curMatch.away_score !== null) ? `${curMatch.home_score}x${curMatch.away_score}` : "A definir";
-      const txt = `⚽ Palmeiras ${placar} ${curMatch.opponent}\n🌟 Craque: ${currentCraque?`${currentCraque.name} (${currentCraque.avg.toFixed(1)})`:'-'}\n🐟 Bagre: ${currentBagre?`${currentBagre.name} (${currentBagre.avg.toFixed(1)})`:'-'}\n\nConfira em: ${window.location.origin}`;
+      const txt = `⚽ ${getTeamName()} ${placar} ${curMatch.opponent}\n🌟 Craque: ${currentCraque?`${currentCraque.name} (${currentCraque.avg.toFixed(1)})`:'-'}\n🐟 Bagre: ${currentBagre?`${currentBagre.name} (${currentBagre.avg.toFixed(1)})`:'-'}\n\nConfira em: ${window.location.origin}`;
       window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, '_blank');
     }
 
     function switchTab(tab) {
+      if (tab === 'jogos' && isFifaMode()) tab = 'rate';
       ['rate', 'compare', 'bolao', 'ranking', 'jogos'].forEach(t => {
         document.getElementById(`view${t.charAt(0).toUpperCase() + t.slice(1)}`).style.display = t === tab ? 'block' : 'none';
         const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);

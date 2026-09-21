@@ -1,6 +1,8 @@
     const SUPABASE_URL = "https://exkurcyjralifdgdmdjt.supabase.co";
     const SUPABASE_KEY = "sb_publishable_kP5nMFx8P0OmrV0gocZqEg_0ZXI56r1";
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const PALMEIRAS_WATERMARK = 'https://upload.wikimedia.org/wikipedia/commons/1/10/Palmeiras_logo.svg';
+    const BRASIL_WATERMARK = 'https://www.cbf.com.br/_next/image?q=100&url=%2Flogo%2Flogo-borda.png&w=828';
 
     let FRIENDS = ["Celão", "Danão", "Bona", "Gabão", "Calango", "Benga", "Lele", "Gabo"];
     const INITIAL_MATCH = { opponent: "Botafogo", match_date: "2026-09-06", match_time: "2026-09-06T16:00:00", competition: "Brasileirão Série A" };
@@ -118,13 +120,17 @@
       document.getElementById('loginBrandTitle').textContent = fifa ? 'Notas da Seleção' : 'Notas do Verdão';
       document.getElementById('loginBrandSubtitle').textContent = fifa ? 'Especial Data FIFA' : 'Painel da Torcida';
       document.getElementById('eventModeBadge').style.display = fifa ? 'block' : 'none';
+      document.getElementById('eventHero').style.display = fifa ? 'flex' : 'none';
       document.getElementById('tabJogos').style.display = fifa ? 'none' : 'inline-flex';
       document.getElementById('bolaoTeamName').textContent = team;
       document.getElementById('scoreModalTeamName').textContent = team;
       document.getElementById('newMatchModalTitle').textContent = fifa ? 'Cadastrar Jogo do Brasil 🇧🇷' : 'Cadastrar Próximo Jogo ⚽';
       document.getElementById('modalOpponent').placeholder = fifa ? 'Ex: Argentina, Japão...' : 'Ex: Corinthians, Flamengo...';
       document.getElementById('modalCompetition').placeholder = fifa ? 'Ex: Amistoso Internacional, Eliminatórias...' : 'Ex: Brasileirão, Allianz Parque...';
-      document.getElementById('watermarkLogo').style.display = fifa ? 'none' : 'block';
+      const watermark = document.getElementById('watermarkLogo');
+      watermark.src = fifa ? BRASIL_WATERMARK : PALMEIRAS_WATERMARK;
+      watermark.alt = fifa ? 'Brasão da Seleção Brasileira' : 'Marca d\'água do Palmeiras';
+      watermark.style.display = 'block';
       const modeButton = document.getElementById('btnFifaMode');
       if (modeButton) modeButton.textContent = fifa ? '🐷 Voltar Palmeiras' : '🇧🇷 Data FIFA';
     }

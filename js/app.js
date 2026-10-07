@@ -30,7 +30,7 @@
     let appMode = 'palmeiras';
     let appModeChannel = null;
 
-    let termoChallenge = null, pistasChallenge = null, missing11Challenge = null, daysSinceStart = 1;
+    let pistasChallenge = null, missing11Challenge = null, daysSinceStart = 1;
     const today = new Date();
     const todayDateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
 
@@ -103,7 +103,7 @@
           showLoading('Atualizando o evento...');
           try {
             await initApp();
-            if (!isFifaMode()) { await loadDailyChallenge(); await loadMissing11Challenge(); await loadGameStates(); await loadDailyRankings(); }
+            await loadDailyChallenge(); await loadMissing11Challenge(); await loadGameStates(); await loadDailyRankings();
             showToast(isFifaMode() ? '🇧🇷 Data FIFA ativada!' : '🐷 Voltamos ao Palmeiras!');
           } catch (error) { reportError('Erro ao receber modo global', error); }
           finally { hideLoading(); }
@@ -121,7 +121,8 @@
       document.getElementById('loginBrandSubtitle').textContent = fifa ? 'Especial Data FIFA' : 'Painel da Torcida';
       document.getElementById('eventModeBadge').style.display = fifa ? 'block' : 'none';
       document.getElementById('eventHero').style.display = fifa ? 'flex' : 'none';
-      document.getElementById('tabJogos').style.display = fifa ? 'none' : 'inline-flex';
+      // Os minigames são da resenha do grupo e continuam disponíveis em qualquer evento.
+      document.getElementById('tabJogos').style.display = 'inline-flex';
       document.getElementById('bolaoTeamName').textContent = team;
       document.getElementById('scoreModalTeamName').textContent = team;
       document.getElementById('newMatchModalTitle').textContent = fifa ? 'Cadastrar Jogo do Brasil 🇧🇷' : 'Cadastrar Próximo Jogo ⚽';
@@ -147,7 +148,7 @@
         if (isFifaMode()) switchTab('rate');
         showLoading('Trocando o evento...');
         await initApp();
-        if (!isFifaMode()) { await loadDailyChallenge(); await loadMissing11Challenge(); await loadGameStates(); await loadDailyRankings(); }
+        await loadDailyChallenge(); await loadMissing11Challenge(); await loadGameStates(); await loadDailyRankings();
         showToast(isFifaMode() ? 'Modo Data FIFA ativado para todos!' : 'Modo Palmeiras restaurado para todos!');
       } catch (error) { reportError('Erro ao alternar modo', error, 'Não foi possível alterar o evento global.'); }
       finally { hideLoading(); }
@@ -185,7 +186,7 @@
           toggleAdminMode();
           showLoading('Preparando a resenha...');
           await loadAppMode(); startAppModeSubscription(); await initApp();
-          if (!isFifaMode()) { await loadDailyChallenge(); await loadMissing11Challenge(); await loadGameStates(); await loadDailyRankings(); }
+          await loadDailyChallenge(); await loadMissing11Challenge(); await loadGameStates(); await loadDailyRankings();
           switchTab('rate');
         } else {
           loginScreen.style.display = 'flex'; appScreen.style.display = 'none';
@@ -496,7 +497,6 @@
     }
 
     function switchTab(tab) {
-      if (tab === 'jogos' && isFifaMode()) tab = 'rate';
       ['rate', 'compare', 'bolao', 'ranking', 'jogos'].forEach(t => {
         document.getElementById(`view${t.charAt(0).toUpperCase() + t.slice(1)}`).style.display = t === tab ? 'block' : 'none';
         const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
@@ -506,10 +506,12 @@
     }
 
     function setGameMode(mode) {
-      document.getElementById('gameTermoContainer').style.display = mode === 'termo' ? 'block' : 'none'; document.getElementById('gamePistasContainer').style.display = mode === 'pistas' ? 'block' : 'none'; document.getElementById('gameMissing11Container').style.display = mode === 'missing11' ? 'block' : 'none';
-      document.getElementById('btnGameTermo').className = mode === 'termo' ? "px-5 py-2 text-[11px] md:text-xs font-black uppercase tracking-wider rounded-xl bg-emerald-600 text-white shadow-sm" : "px-5 py-2 text-[11px] md:text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:text-slate-200";
-      document.getElementById('btnGamePistas').className = mode === 'pistas' ? "px-5 py-2 text-[11px] md:text-xs font-black uppercase tracking-wider rounded-xl bg-emerald-600 text-white shadow-sm" : "px-5 py-2 text-[11px] md:text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:text-slate-200";
-      document.getElementById('btnGameMissing11').className = mode === 'missing11' ? "px-5 py-2 text-[11px] md:text-xs font-black uppercase tracking-wider rounded-xl bg-emerald-600 text-white shadow-sm" : "px-5 py-2 text-[11px] md:text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:text-slate-200";
+      const pistasContainer = document.getElementById('gamePistasContainer'), missingContainer = document.getElementById('gameMissing11Container');
+      const pistasButton = document.getElementById('btnGamePistas'), missingButton = document.getElementById('btnGameMissing11');
+      if (!pistasContainer || !missingContainer || !pistasButton || !missingButton) return;
+      pistasContainer.style.display = mode === 'pistas' ? 'block' : 'none'; missingContainer.style.display = mode === 'missing11' ? 'block' : 'none';
+      pistasButton.className = mode === 'pistas' ? "px-5 py-2 text-[11px] md:text-xs font-black uppercase tracking-wider rounded-xl bg-emerald-600 text-white shadow-sm" : "px-5 py-2 text-[11px] md:text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:text-slate-200";
+      missingButton.className = mode === 'missing11' ? "px-5 py-2 text-[11px] md:text-xs font-black uppercase tracking-wider rounded-xl bg-emerald-600 text-white shadow-sm" : "px-5 py-2 text-[11px] md:text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:text-slate-200";
     }
 
     /* =========================================================================
@@ -522,9 +524,8 @@
         if (data && data.length > 0) {
           const start = new Date("2026-09-01T00:00:00").getTime(), todayMs = new Date(todayDateStr + "T00:00:00").getTime();
           daysSinceStart = Math.max(0, Math.floor((todayMs - start) / 86400000));
-          termoChallenge = data[daysSinceStart % data.length];
-          pistasChallenge = data[(daysSinceStart + Math.floor(data.length / 2)) % data.length];
-          document.getElementById('termoDayCount').textContent = daysSinceStart + 1; document.getElementById('pistasDayCount').textContent = daysSinceStart + 1;
+          pistasChallenge = await getScheduledChallenge('pistas', data);
+          document.getElementById('pistasDayCount').textContent = daysSinceStart + 1;
         }
       } catch (err) { reportError('Erro ao carregar desafios', err, 'Não foi possível carregar os desafios do dia.'); }
     }
@@ -534,19 +535,42 @@
         const { data, error } = await db.from('missing11_challenges').select('*').eq('active', true).order('id', { ascending: true });
         if (error) throw error;
         if (!data?.length) return;
-        missing11Challenge = data[daysSinceStart % data.length];
+        missing11Challenge = await getScheduledChallenge('missing11', data);
         document.getElementById('missing11DayCount').textContent = daysSinceStart + 1;
       } catch (error) {
         console.warn('Missing 11 ainda não configurado.', error);
       }
     }
 
+    async function getScheduledChallenge(gameType, challenges) {
+      const findChallenge = id => challenges.find(challenge => String(challenge.id) === String(id));
+      const { data: existing, error: existingError } = await db.from('daily_challenge_schedule').select('challenge_id').eq('play_date', todayDateStr).eq('game_type', gameType).maybeSingle();
+      if (existingError) throw existingError;
+      if (existing) return findChallenge(existing.challenge_id) || challenges[0];
+
+      const { data: history, error: historyError } = await db.from('daily_challenge_schedule').select('challenge_id').eq('game_type', gameType).order('play_date', { ascending: false }).limit(Math.max(0, challenges.length - 1));
+      if (historyError) throw historyError;
+      const recentlyUsed = new Set((history || []).map(item => String(item.challenge_id)));
+      const available = challenges.filter(challenge => !recentlyUsed.has(String(challenge.id)));
+      const choicePool = available.length ? available : challenges;
+      const chosen = choicePool[Math.floor(Math.random() * choicePool.length)];
+
+      const { data: inserted, error: insertError } = await db.from('daily_challenge_schedule').insert({ play_date: todayDateStr, game_type: gameType, challenge_id: String(chosen.id) }).select('challenge_id').single();
+      if (!insertError) return findChallenge(inserted.challenge_id) || chosen;
+      if (insertError.code !== '23505') throw insertError;
+
+      const { data: concurrent, error: concurrentError } = await db.from('daily_challenge_schedule').select('challenge_id').eq('play_date', todayDateStr).eq('game_type', gameType).single();
+      if (concurrentError) throw concurrentError;
+      return findChallenge(concurrent.challenge_id) || chosen;
+    }
+
     async function loadGameStates() {
       const { data, error } = await db.from('game_daily_results').select('*').eq('friend_name', currentUser).eq('play_date', todayDateStr);
       if (error) { reportError('Erro ao carregar jogos', error, 'Não foi possível carregar seu progresso diário.'); return; }
-      if (termoChallenge) initTermo(data?.find(d => d.game_type === 'termo'));
-      if (pistasChallenge) initPistas(data?.find(d => d.game_type === 'pistas'));
-      initMissing11(data?.find(d => d.game_type === 'missing11'));
+      const pistasState = data?.find(d => d.game_type === 'pistas' && String(d.game_state?.challengeId || '') === String(pistasChallenge?.id || ''));
+      const missing11State = data?.find(d => d.game_type === 'missing11' && String(d.game_state?.challengeId || '') === String(missing11Challenge?.id || ''));
+      if (pistasChallenge) initPistas(pistasState);
+      initMissing11(missing11State);
     }
 
     async function saveGameState(gameType, score, won, completed, stateJson) {
@@ -554,84 +578,6 @@
       if (error) { reportError('Erro ao salvar jogo diário', error, 'Seu progresso não pôde ser salvo.'); return false; }
       if(completed) loadDailyRankings();
       return true;
-    }
-
-    // Termo
-    let termoWord, termoLen, termoMaxGuesses = 6, termoGuesses = [], currentTermoGuess = "", termoGameOver = false;
-
-    function initTermo(savedData) {
-      termoWord = termoChallenge.termo_word.toUpperCase(); termoLen = termoWord.length;
-      termoGuesses = savedData?.game_state?.guesses || []; termoGameOver = savedData?.completed || false; currentTermoGuess = "";
-      const grid = document.getElementById('termoGrid'); grid.style.gridTemplateColumns = `repeat(${termoLen}, minmax(0, 1fr))`; grid.innerHTML = '';
-      for (let i = 0; i < termoMaxGuesses * termoLen; i++) grid.innerHTML += `<div id="tile-${i}" class="w-10 h-10 md:w-14 md:h-14 border-2 border-emerald-900/60 bg-[#050e09] flex items-center justify-center text-xl md:text-2xl font-black text-white rounded-lg tile-flip shadow-inner"></div>`;
-      renderKeyboard(); termoGuesses.forEach((g, idx) => applyGuessVisuals(g, idx * termoLen, true));
-      if (termoGameOver) endTermo(savedData?.won, true);
-    }
-
-    function renderKeyboard() {
-      const layout = [["Q","W","E","R","T","Y","U","I","O","P"], ["A","S","D","F","G","H","J","K","L"], ["ENTER","Z","X","C","V","B","N","M","⌫"]];
-      const kb = document.getElementById('termoKeyboard'); kb.innerHTML = '';
-      layout.forEach(row => {
-        const rowDiv = document.createElement('div'); rowDiv.className = "flex justify-center gap-0.5 md:gap-1.5";
-        row.forEach(key => {
-          const btn = document.createElement('button'); btn.id = `key-${key}`; btn.textContent = key; btn.onclick = () => handleKeyClick(key);
-          let baseClass = "h-10 md:h-12 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-lg transition text-[11px] md:text-sm shadow-md active:scale-95 flex items-center justify-center ";
-          baseClass += (key === "ENTER" || key === "⌫") ? "px-2 md:px-4 uppercase tracking-wider w-auto min-w-[45px]" : "min-w-[28px] md:w-10 flex-1 max-w-[40px]";
-          btn.className = baseClass; rowDiv.appendChild(btn);
-        }); kb.appendChild(rowDiv);
-      });
-    }
-
-    function handleKeyClick(key) {
-      if (termoGameOver) return;
-      if (key === "⌫") currentTermoGuess = currentTermoGuess.slice(0, -1); else if (key === "ENTER" && currentTermoGuess.length === termoLen) submitTermoGuess(); else if (key !== "ENTER" && currentTermoGuess.length < termoLen) currentTermoGuess += key;
-      updateGridDisplay();
-    }
-
-    function updateGridDisplay() {
-      const startIdx = termoGuesses.length * termoLen;
-      for (let i = 0; i < termoLen; i++) {
-        const tile = document.getElementById(`tile-${startIdx + i}`); tile.textContent = currentTermoGuess[i] || "";
-        if (currentTermoGuess[i]) { tile.classList.add('border-emerald-600', 'tile-pop'); tile.classList.remove('border-emerald-900/60'); } else { tile.classList.remove('border-emerald-600', 'tile-pop'); tile.classList.add('border-emerald-900/60'); }
-      }
-    }
-
-    async function submitTermoGuess() {
-      const guess = currentTermoGuess; termoGuesses.push(guess); applyGuessVisuals(guess, (termoGuesses.length - 1) * termoLen, false); currentTermoGuess = "";
-      const won = (guess === termoWord); termoGameOver = won || (termoGuesses.length === termoMaxGuesses);
-      await saveGameState('termo', won ? termoGuesses.length : 0, won, termoGameOver, { guesses: termoGuesses });
-      setTimeout(() => { if (termoGameOver) endTermo(won); }, termoLen * 150 + 200);
-    }
-
-    function applyGuessVisuals(guess, startIdx, instant) {
-      let targetArr = termoWord.split(''), colors = Array(termoLen).fill('gray');
-      for (let i = 0; i < termoLen; i++) { if (guess[i] === targetArr[i]) { colors[i] = 'green'; targetArr[i] = null; } }
-      for (let i = 0; i < termoLen; i++) { if (colors[i] !== 'green' && targetArr.includes(guess[i])) { colors[i] = 'yellow'; targetArr[targetArr.indexOf(guess[i])] = null; } }
-      for (let i = 0; i < termoLen; i++) {
-        setTimeout(() => {
-          const tile = document.getElementById(`tile-${startIdx + i}`), btn = document.getElementById(`key-${guess[i]}`); tile.textContent = guess[i]; tile.classList.remove('bg-[#050e09]', 'border-emerald-600', 'border-emerald-900/60');
-          if (colors[i] === 'green') { tile.classList.add('bg-emerald-600', 'border-emerald-500'); if(btn) btn.className = btn.className.replace(/bg-slate-[87]00/g, 'bg-emerald-600'); } 
-          else if (colors[i] === 'yellow') { tile.classList.add('bg-amber-500', 'border-amber-400'); if (btn && !btn.className.includes('bg-emerald-600')) btn.className = btn.className.replace(/bg-slate-[87]00/g, 'bg-amber-500'); } 
-          else { tile.classList.add('bg-slate-800', 'border-slate-700', 'text-slate-400'); if (btn && !btn.className.includes('bg-emerald-600') && !btn.className.includes('bg-amber-500')) btn.className = btn.className.replace(/bg-slate-[87]00/g, 'bg-slate-900 text-slate-500'); }
-        }, instant ? 0 : i * 150);
-      }
-    }
-
-    function endTermo(won, instant = false) {
-      document.getElementById('termoResult').style.display = 'block'; const title = document.getElementById('termoResultTitle');
-      if (won) { title.innerHTML = `🐷 Sensacional!<br><span class="text-sm text-emerald-400 font-medium">Acertou em ${termoGuesses.length} tentativa(s).</span>`; if(!instant) showToast("Vitória Alviverde!", "🏆"); } 
-      else { title.innerHTML = `😢 Fim de Jogo<br><span class="text-sm text-rose-400 font-medium">A palavra era ${termoWord}.</span>`; }
-    }
-
-    function shareTermoToWhatsApp() {
-      let txt = `Termo do Verdão #${daysSinceStart + 1} - ${termoGameOver && termoGuesses[termoGuesses.length-1] === termoWord ? termoGuesses.length : 'X'}/${termoMaxGuesses}\n\n`;
-      termoGuesses.forEach(g => {
-        let tArr = termoWord.split(''), rowStr = Array(termoLen).fill('⬛');
-        for (let i=0; i<termoLen; i++) { if (g[i] === tArr[i]) { rowStr[i] = '🟩'; tArr[i] = null; } }
-        for (let i=0; i<termoLen; i++) { if (rowStr[i] !== '🟩' && tArr.includes(g[i])) { rowStr[i] = '🟨'; tArr[tArr.indexOf(g[i])] = null; } }
-        txt += rowStr.join('') + '\n';
-      }); txt += `\nJogue em: ${window.location.origin}`;
-      window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, '_blank');
     }
 
     // Pistas
@@ -647,7 +593,7 @@
 
     async function revealNextClue() {
       if (pGameOver || pClueIdx >= 5) return;
-      renderClueUI(); await saveGameState('pistas', pScore, false, false, { clueIndex: pClueIdx });
+      renderClueUI(); await saveGameState('pistas', pScore, false, false, { clueIndex: pClueIdx, challengeId: pistasChallenge.id });
     }
 
     function renderClueUI() {
@@ -664,13 +610,13 @@
       if (!guess) return;
       
       if (guess === ans || ans.includes(guess)) {
-        await saveGameState('pistas', pScore, true, true, { clueIndex: pClueIdx }); endPistas(true);
+        await saveGameState('pistas', pScore, true, true, { clueIndex: pClueIdx, challengeId: pistasChallenge.id }); endPistas(true);
       } else {
         pScore -= 100; inputEl.value = ''; inputEl.classList.add('border-rose-500'); showToast("Errou! -100 pts", "🔴");
         setTimeout(() => inputEl.classList.remove('border-rose-500'), 1000);
         if (pScore <= 0) { 
           pScore = 0; 
-          await saveGameState('pistas', 0, false, true, { clueIndex: pClueIdx }); 
+          await saveGameState('pistas', 0, false, true, { clueIndex: pClueIdx, challengeId: pistasChallenge.id }); 
           endPistas(false); 
         } else {
           revealNextClue();
@@ -785,9 +731,8 @@
       const { data, error } = await db.from('game_daily_results').select('*').eq('play_date', todayDateStr);
       if (error) { reportError('Erro ao carregar ranking diário', error, 'Não foi possível carregar o ranking do dia.'); return; }
       if(!data) return;
-      const tData = data.filter(d => d.game_type === 'termo' && d.completed && d.won).sort((a,b) => a.score - b.score), pData = data.filter(d => d.game_type === 'pistas' && d.completed).sort((a,b) => b.score - a.score);
+      const pData = data.filter(d => d.game_type === 'pistas' && d.completed).sort((a,b) => b.score - a.score);
       const missing11Data = data.filter(d => d.game_type === 'missing11' && d.completed).sort((a, b) => (a.game_state?.attempts ?? Infinity) - (b.game_state?.attempts ?? Infinity));
-      document.getElementById('rankingTermoList').innerHTML = tData.length ? tData.slice(0,5).map((d, i) => `<div class="flex justify-between items-center py-2"><div class="flex items-center gap-2"><span class="text-xs font-black text-emerald-500 w-3">${i+1}</span><span class="font-bold text-white text-xs">${d.friend_name}</span></div><span class="text-xs font-black text-emerald-400">${d.score}/6</span></div>`).join('') : '<div class="text-xs text-slate-500 text-center py-2">Ninguém finalizou.</div>';
       document.getElementById('rankingPistasList').innerHTML = pData.length ? pData.slice(0,5).map((d, i) => `<div class="flex justify-between items-center py-2"><div class="flex items-center gap-2"><span class="text-xs font-black text-emerald-500 w-3">${i+1}</span><span class="font-bold text-white text-xs">${d.friend_name}</span></div><span class="text-xs font-black text-amber-400">${d.score} pts</span></div>`).join('') : '<div class="text-xs text-slate-500 text-center py-2">Ninguém finalizou.</div>';
       document.getElementById('rankingMissing11List').innerHTML = missing11Data.length ? missing11Data.slice(0,5).map((d, i) => `<div class="flex justify-between items-center py-2"><div class="flex items-center gap-2"><span class="text-xs font-black text-emerald-500 w-3">${i+1}</span><span class="font-bold text-white text-xs">${d.friend_name}</span></div><span class="text-xs font-black text-emerald-400">${d.game_state?.attempts ?? '-'} tent.</span></div>`).join('') : '<div class="text-xs text-slate-500 text-center py-2">Ninguém finalizou.</div>';
     }
@@ -811,4 +756,5 @@
       }
     });
 
+    setGameMode('pistas');
     checkSession();

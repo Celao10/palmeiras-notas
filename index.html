@@ -193,31 +193,11 @@
     <!-- ABA 5: RESENHA & JOGOS -->
     <main id="viewJogos" style="display: none;" class="space-y-6">
       <div class="flex p-1 bg-[#050e09] rounded-2xl border border-emerald-900/60 w-fit mx-auto shadow-inner">
-        <button id="btnGameTermo" onclick="setGameMode('termo')" class="px-5 py-2 text-[11px] md:text-xs font-black uppercase tracking-wider rounded-xl bg-emerald-600 text-white shadow-sm">Termo Alviverde</button>
-        <button id="btnGamePistas" onclick="setGameMode('pistas')" class="px-5 py-2 text-[11px] md:text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:text-slate-200">Quem é o Jogador?</button>
+        <button id="btnGamePistas" onclick="setGameMode('pistas')" class="px-5 py-2 text-[11px] md:text-xs font-black uppercase tracking-wider rounded-xl bg-emerald-600 text-white shadow-sm">Quem é o Jogador?</button>
         <button id="btnGameMissing11" onclick="setGameMode('missing11')" class="px-5 py-2 text-[11px] md:text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:text-slate-200">Missing 11</button>
       </div>
 
-      <!-- JOGO 1: TERMO ALVIVERDE -->
-      <div id="gameTermoContainer" class="max-w-md mx-auto space-y-6">
-        <div class="text-center space-y-1">
-          <h3 class="text-xl font-black text-white uppercase tracking-tight">Termo do Verdão</h3>
-          <p class="text-[10px] text-emerald-400/80 font-semibold uppercase tracking-widest">Desafio Diário #<span id="termoDayCount">1</span></p>
-        </div>
-        <div class="flex justify-center px-2">
-          <div id="termoGrid" class="grid gap-1.5 md:gap-2"></div>
-        </div>
-        <div id="termoResult" style="display: none;" class="bg-emerald-950/40 border border-emerald-500/30 p-4 rounded-2xl text-center space-y-3">
-          <h4 id="termoResultTitle" class="text-lg font-black text-white"></h4>
-          <button onclick="shareTermoToWhatsApp()" class="px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg flex items-center justify-center gap-2 w-full transition">
-            <span>📲</span> Compartilhar no Zap
-          </button>
-        </div>
-        <!-- TECLADO MOBILE OTIMIZADO -->
-        <div id="termoKeyboard" class="space-y-1.5 select-none touch-manipulation px-1"></div>
-      </div>
-
-      <!-- JOGO 2: QUEM É O JOGADOR? -->
+      <!-- JOGO 1: QUEM É O JOGADOR? -->
       <div id="gamePistasContainer" style="display: none;" class="max-w-lg mx-auto space-y-5">
         <div class="text-center space-y-1">
           <h3 class="text-xl font-black text-white uppercase tracking-tight">Quem é o Jogador?</h3>
@@ -248,7 +228,7 @@
         </div>
       </div>
 
-      <!-- JOGO 3: MISSING 11 -->
+      <!-- JOGO 2: MISSING 11 -->
       <div id="gameMissing11Container" style="display: none;" class="max-w-2xl mx-auto space-y-5">
         <div class="text-center space-y-1">
           <h3 class="text-xl font-black text-white uppercase tracking-tight">Missing 11</h3>
@@ -279,11 +259,7 @@
       <!-- RANKING DO DIA (JOGOS) -->
       <div class="pt-6 mt-6 border-t border-emerald-950">
         <h3 class="text-center font-black text-white uppercase tracking-wider mb-4">🏆 Melhores de Hoje</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="bg-[#0a1811] rounded-3xl border border-emerald-900/40 p-4">
-            <h4 class="font-extrabold text-emerald-400 text-[10px] uppercase tracking-widest text-center mb-3">Termo Alviverde</h4>
-            <div id="rankingTermoList" class="divide-y divide-emerald-950/60 text-sm"></div>
-          </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
           <div class="bg-[#0a1811] rounded-3xl border border-emerald-900/40 p-4">
             <h4 class="font-extrabold text-emerald-400 text-[10px] uppercase tracking-widest text-center mb-3">Quem é o Jogador?</h4>
             <div id="rankingPistasList" class="divide-y divide-emerald-950/60 text-sm"></div>
